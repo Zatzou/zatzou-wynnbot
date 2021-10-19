@@ -52,7 +52,7 @@ pub mod world {
 
 /// Item information and data
 pub mod items {
-    use std::{collections::BTreeMap, ops::{Range, RangeInclusive}};
+    use std::{collections::BTreeMap, ops::RangeInclusive};
 
     use serenity::utils::Color;
     use serde::Deserialize;
@@ -60,7 +60,7 @@ pub mod items {
     use crate::wynn::color;
 
     /// All possible rarities of items
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Clone)]
     pub enum Rarity {
         NORMAL,
         UNIQUE,
@@ -72,7 +72,7 @@ pub mod items {
     }
     
     /// Item types
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Clone)]
     pub enum Type {
         SPEAR,
         WAND,
@@ -217,14 +217,14 @@ pub mod items {
         SUPER_FAST,
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Clone)]
     pub struct ItemList {
         pub items: Vec<Item>,
         pub identificationOrder: IdentificationOrder,
     }
 
     /// Representation of a wynntils api item
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Clone)]
     pub struct Item {
         /// Name of the item
         pub displayName: String,
@@ -311,12 +311,12 @@ pub mod items {
         }
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Clone)]
     pub struct ItemInfo {
         pub r#type: Type,
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Clone)]
     pub struct Requirements {
         pub level: Option<i32>,
         pub strength: Option<i32>,
@@ -327,7 +327,7 @@ pub mod items {
     }
 
     /// damagetypes of the item
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Clone)]
     pub struct DamageTypes {
         pub neutral: Option<String>,
         pub earth: Option<String>,
@@ -338,7 +338,7 @@ pub mod items {
     }
 
     /// defensetypes of the item
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Clone)]
     pub struct DefenseTypes {
         pub health: Option<i32>,
         pub earth: Option<i32>,
@@ -361,14 +361,14 @@ pub mod items {
     /// Struct containing a single id for an item.
     /// 
     /// This format is intended for deserialisation and does not contain the actual id type.
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Clone)]
     pub struct StatusId {
         pub r#type: StatusType,
         pub isFixed: bool,
         pub baseValue: i32,
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Deserialize, Clone)]
     pub struct IdentificationOrder {
         pub order: BTreeMap<Identification, i32>,
         pub groups: Vec<String>,

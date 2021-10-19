@@ -12,15 +12,23 @@ use tracing::{error, info};
 
 use crate::wynn::world::{Territories, Territory};
 use crate::{BOT_NAME, BOT_VERSION};
+use cached::proc_macro::cached;
+
+// allow getting a new map every 30s otherwise use a cached one
+#[cached(time=30)]
+async fn get_map() -> Territories {
+    info!("Getting new map data from wynntils");
+    let terrs: Territories = reqwest::get("https://athena.wynntils.com/cache/get/territoryList")
+        .await.unwrap()
+        .json()
+        .await.unwrap();
+    terrs
+}
 
 #[command]
 async fn map(ctx: &Context, msg: &Message) -> CommandResult {
-    // load territory data from wynntils api TODO: caching
-    let terrs: Territories = reqwest::get("https://athena.wynntils.com/cache/get/territoryList")
-        .await?
-        .json()
-        .await?;
-    // let terrs = cache::get_territories(ctx).await?; // TODO: get this bs working
+    // load territory data from wynntils api
+    let terrs = get_map().await;
 
     // ouput image
     let mut out = tiny_skia::Pixmap::load_png("./main-map2.png")?;
@@ -58,14 +66,14 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
             };
 
             // guild color calculations
-            let col = if terr.guildColor != "" {
+            let col = if !terr.guildColor.is_empty() {
                 &terr.guildColor[1..]
             } else {
                 "ffffff"
             };
 
             // hex to rgb
-            let color = colorsys::Rgb::from_hex_str(&col)?;
+            let color = colorsys::Rgb::from_hex_str(col)?;
 
             // usvg stuff
             let stroke = Some(usvg::Stroke {
@@ -91,8 +99,8 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
 
             // create the element
             svgtree.root().append_kind(usvg::NodeKind::Path(usvg::Path {
-                stroke: stroke,
-                fill: fill,
+                stroke,
+                fill,
                 data: Rc::new(usvg::PathData::from_rect(usvg::Rect::new(
                     x, y, width, height,
                 ).unwrap())),
@@ -107,8 +115,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
                 t.push(terr);
             } else {
                 let guild = terr.guildPrefix.clone();
-                let mut vec = Vec::new();
-                vec.push(terr);
+                let vec: Vec<Territory> = Vec::from([terr]);
                 guilds.insert(guild, vec);
             };
         }
@@ -154,7 +161,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
         // name stuff TODO: not worki
         for (name, pos) in names {
             let svege = usvg::Tree::from_str(&format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1364 2162"><text x="{}" y="{}">{}</text></svg>"#, pos.0, pos.1, name), &usvg::Options::default().to_ref()).unwrap();
-            info!("{} at {} {}", name, pos.0, pos.1);
+            //info!("{} at {} {}", name, pos.0, pos.1);
             resvg::render(&svege, usvg::FitTo::Original, out.as_mut());
         }
     }
@@ -202,11 +209,11 @@ fn median(list: &[f64]) -> f64 {
     if len % 2 == 0 {
         mean(&list[(mid - 1)..(mid + 1)])
     } else {
-        f64::from(list[mid])
+        list[mid]
     }
 }
 
 fn mean(list: &[f64]) -> f64 {
     let sum: f64 = Iterator::sum(list.iter());
-    f64::from(sum) / (list.len() as f64)
+    sum / (list.len() as f64)
 }

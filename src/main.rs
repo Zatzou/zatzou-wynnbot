@@ -1,5 +1,4 @@
 mod commands;
-mod cache;
 mod error;
 mod wynn;
 
@@ -93,8 +92,6 @@ async fn main() {
         let mut data = client.data.write().await;
         // shardmanager
         data.insert::<ShardManagerContainer>(client.shard_manager.clone());
-        // caches
-        cache::create_cache(&mut data).await;
     }
 
     let shard_manager = client.shard_manager.clone();

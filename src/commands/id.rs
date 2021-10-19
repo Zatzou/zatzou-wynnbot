@@ -1,12 +1,12 @@
 use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
 
+use once_cell::sync::OnceCell;
 use serenity::framework::standard::{macros::command, CommandResult};
 use serenity::model::interactions::message_component::ButtonStyle;
 use serenity::model::prelude::*;
 use serenity::prelude::*;
 use tokio::fs;
-use tracing::info;
 
 use crate::{BOT_NAME, BOT_VERSION};
 use crate::error::create_error_msg;
@@ -23,17 +23,19 @@ const WATER: &str = "<:water:899382254948737077>";
 const FIRE: &str = "<:fire1:899382464882044948>";
 const AIR: &str = "<:air:899382632532570123>";
 
+static ITEMDB: OnceCell<ItemList> = OnceCell::new(); 
+
 #[command]
 async fn id(ctx: &Context, msg: &Message) -> CommandResult {
-    // TODO: maybe do it like this if caching is possible, tho it might be better to just use a local db to avoid network requests
-    // let itemlist: ItemList = reqwest::get("https://athena.wynntils.com/cache/get/itemList")
-    //     .await?
-    //     .json()
-    //     .await?;
-
-    // get the list of all items
-    let itemlist: ItemList = serde_json::from_slice(&fs::read("./item_list.json").await?)?;
-    let items = itemlist.items;
+    // get the list of all items and cache them after the first time
+    let itemlist = if let Some(db) = ITEMDB.get() {
+        db
+    } else {
+        let itemlist: ItemList = serde_json::from_slice(&fs::read("./item_list.json").await?)?;
+        ITEMDB.set(itemlist).unwrap();
+        ITEMDB.get().unwrap()
+    };
+    let items = &itemlist.items;
 
     // read and parse the input string
     let mut temp = msg.content.strip_prefix(".id ").unwrap().trim_start_matches(START_CHAR).trim_end_matches(END_CHAR).split_terminator(SEPARATOR);
@@ -43,13 +45,13 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
         create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
         return Ok(());
     };
-    let mut ids = if let Some(v) = temp.next() {
+    let ids = if let Some(v) = temp.next() {
         v
     } else {
         create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
         return Ok(());
     }; // https://github.com/Wynntils/Wynntils/blob/development/src/main/java/com/wynntils/modules/utilities/managers/ChatItemManager.java
-    let mut powders = temp.next();
+    let powders = temp.next();
 
     // Read rerolls either from the id section or the powder section
     let rerolls = if let Some(powders) = powders {
@@ -59,7 +61,7 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     };
 
     // find the item from the item database based on it's name
-    let item = items.into_iter().find(|f| f.displayName == name);
+    let item = items.iter().find(|f| f.displayName == name);
     
     // make sure the item exists
     let item = if let Some(item) = item {
@@ -178,7 +180,7 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     }
 
     // decode the id chars into numbers
-    let mut ids: Vec<i32> = ids.chars().map(|c| c as i32 - OFFSET).collect();
+    let ids: Vec<i32> = ids.chars().map(|c| c as i32 - OFFSET).collect();
 
     // sort ids so their read correctly
     let mut finalids = BTreeMap::new();
@@ -218,8 +220,8 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
         } else {
             let idstats = ids[ididx as usize];
             let encodedval = idstats / 4;
-            let mut value = 0;
-            let mut prosentti = 0.0;
+            let value;
+            let prosentti;
 
             // wynntils api sux
             // https://github.com/Wynntils/Wynntils/blob/development/src/main/java/com/wynntils/webapi/profiles/item/objects/IdentificationContainer.java#L38
@@ -264,10 +266,8 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
             }
         }
         desc.push(']');
-        desc.push('\n');
-    } else {
-        desc.push('\n');
     }
+    desc.push('\n');
 
     // Footer with ids
     if rerolls != 0 {
@@ -278,7 +278,7 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
 
     // make item name with id % if needed
     let mut itemname = item.displayName.clone();
-    if idprosentit.len() != 0 {
+    if !idprosentit.is_empty() {
         itemname.push_str(&format!(" [{:.3}%]", idprosentit.iter().sum::<f64>() / idprosentit.len() as f64))
     }
 
@@ -325,7 +325,7 @@ struct Id {
 impl Id {
     fn max_id(&self) -> i32 {
         if self.fixed || (-1 <= self.baseval && self.baseval <= 1) {
-            return self.baseval;
+            self.baseval
         } else if self.baseval < 1 {
             f64::round(self.baseval as f64 * 0.7) as i32
         } else {
@@ -334,7 +334,7 @@ impl Id {
     }
     fn min_id(&self) -> i32 {
         if self.fixed || (-1 <= self.baseval && self.baseval <= 1) {
-            return self.baseval;
+            self.baseval
         } else if self.baseval < 1 {
             f64::round(self.baseval as f64 * 1.3) as i32
         } else {
