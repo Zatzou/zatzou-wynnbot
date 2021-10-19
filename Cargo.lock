@@ -305,26 +305,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "epicgamerbot"
-version = "0.1.0"
-dependencies = [
- "chrono",
- "colorsys",
- "config",
- "reqwest",
- "resvg",
- "serde",
- "serde_json",
- "serenity",
- "svg",
- "tiny-skia",
- "tokio",
- "tracing",
- "tracing-subscriber",
- "usvg",
-]
-
-[[package]]
 name = "flate2"
 version = "1.0.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1896,3 +1876,23 @@ name = "xmlwriter"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "ec7a2a501ed189703dba8b08142f057e887dfc4b2cc4db2d343ac6376ba3e0b9"
+
+[[package]]
+name = "zatzoubot"
+version = "0.1.0"
+dependencies = [
+ "chrono",
+ "colorsys",
+ "config",
+ "reqwest",
+ "resvg",
+ "serde",
+ "serde_json",
+ "serenity",
+ "svg",
+ "tiny-skia",
+ "tokio",
+ "tracing",
+ "tracing-subscriber",
+ "usvg",
+]
