@@ -202,7 +202,6 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
     Ok(())
 }
 
-<<<<<<< HEAD
 /// Gets the guilds color from it's name
 #[cached]
 fn guild_color(name: String) -> u32 {
@@ -211,14 +210,6 @@ fn guild_color(name: String) -> u32 {
     hasher.update(name.as_bytes());
     let hash = hasher.finalize();
     // bitwise and it with 0xFFFFFF cuz wynntils did it like that
-=======
-#[cached]
-fn guild_color(name: String) -> u32 {
-    let mut hasher = Hasher::new();
-    hasher.update(name.as_bytes());
-    let hash = hasher.finalize();
-
->>>>>>> df8fd5a991ea557b6cdb94a3e223d882ba1b6faf
     hash & 0xFFFFFF
 }
 
