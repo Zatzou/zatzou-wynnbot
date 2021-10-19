@@ -56,14 +56,14 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
 
             // position calculations
             let x = if loc.startX < loc.endX {
-                (loc.startX / 3.0) - 566.333 + 1364.0
+                calc_x(loc.startX)
             } else {
-                (loc.endX / 3.0) - 566.333 + 1364.0
+                calc_x(loc.endX)
             };
             let y = if loc.startZ < loc.endZ {
-                (loc.startZ / 3.0) + 41.0 + 2162.0
+                calc_z(loc.startZ)
             } else {
-                (loc.endZ / 3.0) + 41.0 + 2162.0
+                calc_z(loc.endZ)
             };
 
             // guild color calculations
@@ -213,6 +213,13 @@ fn guild_color(name: String) -> u32 {
     hash & 0xFFFFFF
 }
 
+fn calc_x(x: f64) -> f64 {
+    (x / 3.0) - 566.333 + 1364.0
+}
+
+fn calc_z(z: f64) -> f64 {
+    (z / 3.0) + 41.0 + 2162.0
+}
 
 
 fn median(list: &[f64]) -> f64 {
