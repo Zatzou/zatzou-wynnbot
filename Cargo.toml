@@ -27,3 +27,5 @@ tiny-skia = "0.6.1"
 usvg = { version = "0.19", features = ["text"] }
 svg = "0.10"
 colorsys = "0.6"
+crc32fast = "1.2"
+hex = "0.4"

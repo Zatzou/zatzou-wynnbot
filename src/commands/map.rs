@@ -2,6 +2,7 @@ use std::borrow::Cow;
 use std::collections::HashMap;
 use std::rc::Rc;
 
+use crc32fast::Hasher;
 use serenity::framework::standard::{macros::command, CommandResult};
 use serenity::http::AttachmentType;
 use serenity::model::prelude::*;
@@ -46,7 +47,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
         let svgtree = usvg::Tree::create(svg);
 
         // go thru all territories and render the rects for them
-        for (name, terr) in terrs.territories.iter() {
+        for (_, terr) in terrs.territories.iter() {
             let loc = &terr.location;
 
             // widths
@@ -67,13 +68,13 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
 
             // guild color calculations
             let col = if !terr.guildColor.is_empty() {
-                &terr.guildColor[1..]
+                terr.guildColor[1..].to_owned()
             } else {
-                "ffffff"
+                hex::encode(guild_color(terr.guild.clone()).to_ne_bytes())[0..=5].to_owned()
             };
 
             // hex to rgb
-            let color = colorsys::Rgb::from_hex_str(col)?;
+            let color = colorsys::Rgb::from_hex_str(&col)?;
 
             // usvg stuff
             let stroke = Some(usvg::Stroke {
@@ -199,6 +200,17 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
         error!("Error sending message: {:?}", why);
     }
     Ok(())
+}
+
+/// Gets the guilds color from it's name
+#[cached]
+fn guild_color(name: String) -> u32 {
+    // hash the guilds nane with crc32
+    let mut hasher = Hasher::new();
+    hasher.update(name.as_bytes());
+    let hash = hasher.finalize();
+    // bitwise and it with 0xFFFFFF cuz wynntils did it like that
+    hash & 0xFFFFFF
 }
 
 
