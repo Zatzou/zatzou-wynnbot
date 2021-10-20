@@ -1,19 +1,38 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::error::Error;
 use std::rc::Rc;
 
 use crc32fast::Hasher;
+use once_cell::sync::OnceCell;
 use serenity::framework::standard::{macros::command, CommandResult};
 use serenity::http::AttachmentType;
 use serenity::model::prelude::*;
 use serenity::prelude::*;
-use usvg::NodeExt;
+use tiny_skia::Pixmap;
+use usvg::{NodeExt, Tree};
 
 use tracing::{error, info};
 
+use crate::wynn::Gather::{self, GatherSpot};
 use crate::wynn::world::{Territories, Territory};
 use crate::{BOT_NAME, BOT_VERSION};
 use cached::proc_macro::cached;
+
+/// Static for the image file so we don't have to load it every time
+static MAPBASE: OnceCell<Pixmap> = OnceCell::new();
+
+/// Helper function for getting the base map
+fn get_mapbase() -> Result<Pixmap, Box<dyn Error + Send + Sync>> {
+    let mut out = if let Some(pm) = MAPBASE.get() {
+        pm.clone()
+    } else {
+        let map = tiny_skia::Pixmap::load_png("./main-map2.png")?;
+        MAPBASE.set(map.clone()).unwrap();
+        map
+    };
+    Ok(out)
+}
 
 // allow getting a new map every 30s otherwise use a cached one
 #[cached(time=30)]
@@ -32,7 +51,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
     let terrs = get_map().await;
 
     // ouput image
-    let mut out = tiny_skia::Pixmap::load_png("./main-map2.png")?;
+    let mut out = get_mapbase()?;
 
     // all of this rendering stuff has to be in a closure because the ownership and async don't work otherwise
     {
@@ -221,7 +240,6 @@ fn calc_z(z: f64) -> f64 {
     (z / 3.0) + 41.0 + 2162.0
 }
 
-
 fn median(list: &[f64]) -> f64 {
     let len = list.len();
     let mid = len / 2;
@@ -235,4 +253,100 @@ fn median(list: &[f64]) -> f64 {
 fn mean(list: &[f64]) -> f64 {
     let sum: f64 = Iterator::sum(list.iter());
     sum / (list.len() as f64)
+}
+
+#[command]
+async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
+    let spots = Gather::get_gatherspots().await;
+
+    let mut out = get_mapbase()?;
+
+    let wanted = msg.content.strip_prefix(".gather ").unwrap().trim().to_uppercase();
+
+    {
+        // create base svg
+        let svg = usvg::Svg {
+            size: usvg::Size::new(out.width() as f64, out.height() as f64).unwrap(),
+            view_box: usvg::ViewBox {
+                rect: usvg::Rect::new(0.0, 0.0, out.width() as f64, out.height() as f64).unwrap(),
+                aspect: usvg::AspectRatio::default(),
+            },
+        };
+        let mut svgtree = usvg::Tree::create(svg);
+
+        for spot in spots.woodCutting {
+            if spot.r#type == wanted {
+                add_rect(spot, &mut svgtree);
+            }
+        }
+        for spot in spots.mining {
+            if spot.r#type == wanted {
+                add_rect(spot, &mut svgtree);
+            }
+        }
+        for spot in spots.farming {
+            if spot.r#type == wanted {
+                add_rect(spot, &mut svgtree);
+            }
+        }
+        for spot in spots.fishing {
+            if spot.r#type == wanted {
+                add_rect(spot, &mut svgtree);
+            }
+        }
+
+        // render svg
+        resvg::render(&svgtree, usvg::FitTo::Original, out.as_mut());
+    }
+
+    // get the png
+    let png_data = out.encode_png()?;
+
+    // serenity wants a cow for whatever reason
+    let cow = Cow::from(png_data);
+
+    // construct reply message
+    msg
+        .channel_id
+        .send_message(&ctx.http, |m| {
+            m.embed(|e| {
+                e.image("attachment://map.png");
+                e.footer(|f| {
+                    f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
+                    f
+                });
+                e
+            });
+            m.add_file(AttachmentType::Bytes {
+                data: cow,
+                filename: String::from("map.png"),
+            });
+            m
+        })
+        .await?;
+    Ok(())
+}
+
+fn add_rect(spot: GatherSpot, svgtree: &mut Tree) {
+    let x = calc_x(spot.location.x);
+    let y = calc_z(spot.location.z);
+
+    let fill = Some(usvg::Fill {
+        paint: usvg::Paint::Color(usvg::Color::new_rgb(
+            255,
+            0,
+            0,
+        )),
+        opacity: 1.0.into(),
+        ..usvg::Fill::default()
+    });
+
+    // create the element
+    svgtree.root().append_kind(usvg::NodeKind::Path(usvg::Path {
+        fill,
+        data: Rc::new(usvg::PathData::from_rect(usvg::Rect::new(
+            x - 2.5, y - 2.5, 5.0, 5.0,
+        ).unwrap())),
+        ..usvg::Path::default()
+    }));
 }

@@ -397,3 +397,40 @@ pub mod items {
         }
     }
 }
+
+pub mod Gather {
+    use serde::Deserialize;
+    use cached::proc_macro::cached;
+    use tracing::info;
+
+    #[cached(time=3600)]
+    pub async fn get_gatherspots() -> GatherSpots {
+        info!("Getting new gathering data from wynntils");
+        let gather: GatherSpots = reqwest::get("https://athena.wynntils.com/cache/get/gatheringSpots")
+            .await.unwrap()
+            .json()
+            .await.unwrap();
+        gather
+    }
+
+    #[derive(Deserialize, Clone)]
+    pub struct GatherSpots {
+        pub woodCutting: Vec<GatherSpot>,
+        pub mining: Vec<GatherSpot>,
+        pub farming: Vec<GatherSpot>,
+        pub fishing: Vec<GatherSpot>,
+    }
+
+    #[derive(Clone, Deserialize)]
+    pub struct GatherSpot {
+        pub reliability: i32,
+        pub location: Location,
+        pub r#type: String,
+    }
+
+    #[derive(Clone, Deserialize)]
+    pub struct Location {
+        pub x: f64,
+        pub z: f64,
+    }
+}
