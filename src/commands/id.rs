@@ -350,3 +350,86 @@ fn formatnum(num: i32) -> String {
         return format!("{}", num);
     }
 }
+
+#[command]
+async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
+    // get the list of all items and cache them after the first time
+    let itemlist = if let Some(db) = ITEMDB.get() {
+        db
+    } else {
+        let itemlist: ItemList = serde_json::from_slice(&fs::read("./item_list.json").await?)?;
+        ITEMDB.set(itemlist).unwrap();
+        ITEMDB.get().unwrap()
+    };
+    let items = &itemlist.items;
+
+    // read and parse the input string
+    let mut temp = msg.content.strip_prefix(".maxid ").unwrap().trim_start_matches(START_CHAR).trim_end_matches(END_CHAR).split_terminator(SEPARATOR);
+    let name = if let Some(v) = temp.next() {
+        v.to_string()
+    } else {
+        create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
+        return Ok(());
+    };
+    let ids = if let Some(v) = temp.next() {
+        v
+    } else {
+        create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
+        return Ok(());
+    }; // https://github.com/Wynntils/Wynntils/blob/development/src/main/java/com/wynntils/modules/utilities/managers/ChatItemManager.java
+    let powders = temp.next();
+
+    // find the item from the item database based on it's name
+    let item = items.iter().find(|f| f.displayName == name);
+
+    // make sure the item exists
+    let item = if let Some(item) = item {
+        item
+    } else {
+        create_error_msg(ctx, msg, "Invalid item", "the given item was not found in the current database").await;
+        return Ok(());
+    };
+
+    // decode the id chars into numbers
+    let ids: Vec<i32> = ids.chars().map(|c| c as i32 - OFFSET).collect();
+    
+    // sort ids so their read correctly
+    let mut finalids = BTreeMap::new();
+    for (id, ord) in itemlist.identificationOrder.order.iter() {
+        if let Some(sid) = item.statuses.get(id) {
+            finalids.insert(ord, Id {
+                id: *id,
+                idtype: sid.r#type,
+                fixed: sid.isFixed,
+                baseval: sid.baseValue,
+            });
+        }
+    }
+    
+    let mut perfids: String = String::new();
+
+    for (_, id) in finalids.iter() {
+        if id.fixed {
+            continue;
+        }
+        
+        let value;
+        if i32::abs(id.baseval) > 100 {
+            value = f64::round((id.max_id() as f64 * 100.0 / id.baseval as f64) - 30.0) as i32;
+        } else {
+            value = id.max_id() - id.min_id();
+        }
+
+        perfids.push(char::from_u32((value * 4 + OFFSET) as u32).unwrap());
+    }
+
+    let output = format!("󵿰{}󵿲{}󵀀󵿱", name, perfids);
+
+    msg.channel_id
+        .send_message(&ctx.http, |m| {
+            m.content(output);
+            m
+        }).await?;
+
+    Ok(())
+}
