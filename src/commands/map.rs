@@ -14,6 +14,8 @@ use usvg::{NodeExt, Tree};
 
 use tracing::{error, info};
 
+use crate::error::create_error_msg;
+use crate::helpers::parse_command_args;
 use crate::wynn::Gather::{self, GatherSpot};
 use crate::wynn::world::{Territories, Territory};
 use crate::{BOT_NAME, BOT_VERSION};
@@ -261,7 +263,11 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
 
     let mut out = get_mapbase()?;
 
-    let wanted = msg.content.strip_prefix(".gather ").unwrap().trim().to_uppercase();
+    let wanted = if let Some(s) = parse_command_args(msg).get(1) {
+        s.clone()
+    } else {
+        return gather_usage(ctx, msg).await;
+    };
 
     {
         // create base svg
@@ -349,4 +355,10 @@ fn add_rect(spot: GatherSpot, svgtree: &mut Tree) {
         ).unwrap())),
         ..usvg::Path::default()
     }));
+}
+
+async fn gather_usage(ctx: &Context, msg: &Message) -> CommandResult {
+    create_error_msg(ctx, msg, "Invalid command arguments", "correct usage: .gather (material)").await;
+    
+    Ok(())
 }

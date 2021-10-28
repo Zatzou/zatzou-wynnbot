@@ -1,6 +1,7 @@
 mod commands;
 mod error;
 mod wynn;
+mod helpers;
 
 use std::{collections::HashSet, sync::Arc};
 
