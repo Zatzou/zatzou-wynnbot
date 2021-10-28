@@ -24,7 +24,7 @@ static MAPBASE: OnceCell<Pixmap> = OnceCell::new();
 
 /// Helper function for getting the base map
 fn get_mapbase() -> Result<Pixmap, Box<dyn Error + Send + Sync>> {
-    let mut out = if let Some(pm) = MAPBASE.get() {
+    let out = if let Some(pm) = MAPBASE.get() {
         pm.clone()
     } else {
         let map = tiny_skia::Pixmap::load_png("./main-map2.png")?;
@@ -130,7 +130,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
 
         let mut guilds: HashMap<String, Vec<Territory>> = HashMap::new();
 
-        for (name, terr) in terrs.territories.into_iter() {
+        for (_name, terr) in terrs.territories.into_iter() {
             if let Some(t) = guilds.get_mut(&terr.guildPrefix) {
                 t.push(terr);
             } else {

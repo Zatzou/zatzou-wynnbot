@@ -371,13 +371,6 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
         create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
         return Ok(());
     };
-    let ids = if let Some(v) = temp.next() {
-        v
-    } else {
-        create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
-        return Ok(());
-    }; // https://github.com/Wynntils/Wynntils/blob/development/src/main/java/com/wynntils/modules/utilities/managers/ChatItemManager.java
-    let powders = temp.next();
 
     // find the item from the item database based on it's name
     let item = items.iter().find(|f| f.displayName == name);
@@ -389,9 +382,6 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
         create_error_msg(ctx, msg, "Invalid item", "the given item was not found in the current database").await;
         return Ok(());
     };
-
-    // decode the id chars into numbers
-    let ids: Vec<i32> = ids.chars().map(|c| c as i32 - OFFSET).collect();
     
     // sort ids so their read correctly
     let mut finalids = BTreeMap::new();
