@@ -403,14 +403,14 @@ pub mod Gather {
     use cached::proc_macro::cached;
     use tracing::info;
 
-    #[cached(time=3600)]
-    pub async fn get_gatherspots() -> GatherSpots {
+    #[cached(time=3600, result = true)]
+    pub async fn get_gatherspots() -> Result<GatherSpots, reqwest::Error> {
         info!("Getting new gathering data from wynntils");
         let gather: GatherSpots = reqwest::get("https://athena.wynntils.com/cache/get/gatheringSpots")
-            .await.unwrap()
+            .await?
             .json()
-            .await.unwrap();
-        gather
+            .await?;
+        Ok(gather)
     }
 
     #[derive(Deserialize, Clone)]

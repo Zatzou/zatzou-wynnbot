@@ -37,20 +37,20 @@ fn get_mapbase() -> Result<Pixmap, Box<dyn Error + Send + Sync>> {
 }
 
 // allow getting a new map every 30s otherwise use a cached one
-#[cached(time=30)]
-async fn get_map() -> Territories {
+#[cached(time=30, result = true)]
+async fn get_map() -> Result<Territories, reqwest::Error> {
     info!("Getting new map data from wynntils");
     let terrs: Territories = reqwest::get("https://athena.wynntils.com/cache/get/territoryList")
-        .await.unwrap()
+        .await?
         .json()
-        .await.unwrap();
-    terrs
+        .await?;
+    Ok(terrs)
 }
 
 #[command]
 async fn map(ctx: &Context, msg: &Message) -> CommandResult {
     // load territory data from wynntils api
-    let terrs = get_map().await;
+    let terrs = get_map().await?;
 
     // ouput image
     let mut out = get_mapbase()?;
@@ -266,7 +266,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         return gather_usage(ctx, msg).await;
     };
 
-    let spots = Gather::get_gatherspots().await;
+    let spots = Gather::get_gatherspots().await?;
 
     let mut out = get_mapbase()?;
 
