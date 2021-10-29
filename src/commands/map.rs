@@ -259,15 +259,16 @@ fn mean(list: &[f64]) -> f64 {
 
 #[command]
 async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
-    let spots = Gather::get_gatherspots().await;
-
-    let mut out = get_mapbase()?;
-
+    // get the wanted resource
     let wanted = if let Some(s) = parse_command_args(msg).get(1) {
-        s.clone()
+        s.clone().trim().to_uppercase()
     } else {
         return gather_usage(ctx, msg).await;
     };
+
+    let spots = Gather::get_gatherspots().await;
+
+    let mut out = get_mapbase()?;
 
     {
         // create base svg
