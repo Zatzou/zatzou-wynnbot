@@ -245,7 +245,7 @@ pub mod items {
         /// Statuses or the ids of the item
         pub statuses: BTreeMap<Identification, StatusId>,
         /// Wynnbuilder id for the item
-        pub wynnBuilderID: i32,
+        pub wynnBuilderID: Option<i32>,
     }
     
     impl Item {
