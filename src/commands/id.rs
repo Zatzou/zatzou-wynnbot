@@ -8,6 +8,7 @@ use serenity::model::prelude::*;
 use serenity::prelude::*;
 use tokio::fs;
 
+use crate::helpers::parse_command_args;
 use crate::{BOT_NAME, BOT_VERSION};
 use crate::error::create_error_msg;
 use crate::wynn::items::{IDGROUPS, Identification, ItemList, Powders, StatusType};
@@ -27,18 +28,14 @@ static ITEMDB: OnceCell<ItemList> = OnceCell::new();
 
 #[command]
 async fn id(ctx: &Context, msg: &Message) -> CommandResult {
-    // get the list of all items and cache them after the first time
-    let itemlist = if let Some(db) = ITEMDB.get() {
-        db
-    } else {
-        let itemlist: ItemList = serde_json::from_slice(&fs::read("./item_list.json").await?)?;
-        ITEMDB.set(itemlist).unwrap();
-        ITEMDB.get().unwrap()
-    };
-    let items = &itemlist.items;
-
     // read and parse the input string
-    let mut temp = msg.content.strip_prefix(".id ").unwrap().trim_start_matches(START_CHAR).trim_end_matches(END_CHAR).split_terminator(SEPARATOR);
+    let mut temp = if let Some(item) = parse_command_args(msg).get(1) {
+        item.trim_start_matches(START_CHAR).trim_end_matches(END_CHAR).split_terminator(SEPARATOR)
+    } else {
+        create_error_msg(ctx, msg, "Invalid comamnd arguments", "Usage: .id (item id string)").await;
+        return Ok(())
+    };
+    
     let name = if let Some(v) = temp.next() {
         v.to_string()
     } else {
@@ -52,19 +49,26 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
         return Ok(());
     }; // https://github.com/Wynntils/Wynntils/blob/development/src/main/java/com/wynntils/modules/utilities/managers/ChatItemManager.java
     let powders = temp.next();
-
+    
     // Read rerolls either from the id section or the powder section
     let rerolls = if let Some(powders) = powders {
         powders.chars().last().unwrap() as i32 - OFFSET
     } else {
         ids.chars().last().unwrap() as i32 - OFFSET
     };
-
-    // find the item from the item database based on it's name
-    let item = items.iter().find(|f| f.displayName == name);
     
-    // make sure the item exists
-    let item = if let Some(item) = item {
+    // get the list of all items and cache them after the first time
+    let itemlist = if let Some(db) = ITEMDB.get() {
+        db
+    } else {
+        let itemlist: ItemList = serde_json::from_slice(&fs::read("./item_list.json").await?)?;
+        ITEMDB.set(itemlist).unwrap();
+        ITEMDB.get().unwrap()
+    };
+    let items = &itemlist.items;
+    
+    // find the item and make sure it exists
+    let item = if let Some(item) = items.iter().find(|f| f.displayName == name) {
         item
     } else {
         create_error_msg(ctx, msg, "Invalid item", "the given item was not found in the current database").await;
@@ -99,7 +103,6 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
         desc.push_str(&format!("{} Attack Speed\n\n", speed));
     }
 
-    // TODO: handle powders
     if let Some(damages) = &item.damageTypes {
         if let Some(d) = &damages.neutral {
             desc.push_str(&format!("Neutral Damage: {}\n", d));
@@ -140,7 +143,6 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
             desc.push_str(&format!("{} Earth Defence: {}\n", EARTH, d));
         }
     }
-    // TODO: powder abilities
     desc.push('\n');
 
     // requirements
@@ -310,8 +312,7 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
             });
             m
         })
-        .await
-        .unwrap();
+        .await?;
     Ok(())
 }
 
@@ -353,6 +354,20 @@ fn formatnum(num: i32) -> String {
 
 #[command]
 async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
+    // read and parse the input string
+    let mut temp = if let Some(item) = parse_command_args(msg).get(1) {
+        item.trim_start_matches(START_CHAR).trim_end_matches(END_CHAR).split_terminator(SEPARATOR)
+    } else {
+        create_error_msg(ctx, msg, "Invalid comamnd arguments", "Usage: .maxid (wynntils item id string or item name)").await;
+        return Ok(());
+    };
+    let name = if let Some(v) = temp.next() {
+        v.to_string()
+    } else {
+        create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
+        return Ok(());
+    };
+    
     // get the list of all items and cache them after the first time
     let itemlist = if let Some(db) = ITEMDB.get() {
         db
@@ -363,20 +378,8 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
     };
     let items = &itemlist.items;
 
-    // read and parse the input string
-    let mut temp = msg.content.strip_prefix(".maxid ").unwrap().trim_start_matches(START_CHAR).trim_end_matches(END_CHAR).split_terminator(SEPARATOR);
-    let name = if let Some(v) = temp.next() {
-        v.to_string()
-    } else {
-        create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
-        return Ok(());
-    };
-
-    // find the item from the item database based on it's name
-    let item = items.iter().find(|f| f.displayName == name);
-
-    // make sure the item exists
-    let item = if let Some(item) = item {
+    // find the item from the database
+    let item = if let Some(item) = items.iter().find(|f| f.displayName == name) {
         item
     } else {
         create_error_msg(ctx, msg, "Invalid item", "the given item was not found in the current database").await;

@@ -182,7 +182,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
 
         // name stuff TODO: not worki
         for (name, pos) in names {
-            let svege = usvg::Tree::from_str(&format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1364 2162"><text x="{}" y="{}">{}</text></svg>"#, pos.0, pos.1, name), &usvg::Options::default().to_ref()).unwrap();
+            let svege = usvg::Tree::from_str(&format!(r#"<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1364 2162"><text x="{}" y="{}">{}</text></svg>"#, pos.0, pos.1, name), &usvg::Options::default().to_ref())?;
             //info!("{} at {} {}", name, pos.0, pos.1);
             resvg::render(&svege, usvg::FitTo::Original, out.as_mut());
         }

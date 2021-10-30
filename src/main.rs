@@ -48,7 +48,7 @@ async fn main() {
     let mut config = config::Config::new();
     config
         .merge(config::File::with_name("./config.toml"))
-        .unwrap();
+        .expect("Config file 'config.toml' not found in the current directory");
 
     // Initialize the logger to use environment variables.
     //
@@ -58,8 +58,8 @@ async fn main() {
         .with_max_level(Level::INFO)
         .init();
 
-    let token = config.get::<String>("bot.token").unwrap();
-    let app_id = config.get::<u64>("bot.app_id").unwrap();
+    let token = config.get::<String>("bot.token").expect("Bot token not found in the config file");
+    let app_id = config.get::<u64>("bot.app_id").expect("App id not found in the config file");
 
     let http = Http::new_with_token(&token);
 
