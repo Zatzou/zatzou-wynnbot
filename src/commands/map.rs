@@ -279,6 +279,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
 
     let mut out = get_mapbase()?;
 
+    let mut count = 0;
     {
         // create base svg
         let svg = usvg::Svg {
@@ -293,6 +294,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         if types.contains("W") {
             for spot in spots.woodCutting {
                 if spot.r#type == wanted {
+                    count += 1;
                     add_rect(spot, &mut svgtree);
                 }
             }
@@ -300,6 +302,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         if types.contains("M") {
             for spot in spots.mining {
                 if spot.r#type == wanted {
+                    count += 1;
                     add_rect(spot, &mut svgtree);
                 }
             }
@@ -307,6 +310,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         if types.contains("G") {
             for spot in spots.farming {
                 if spot.r#type == wanted {
+                    count += 1;
                     add_rect(spot, &mut svgtree);
                 }
             }
@@ -314,6 +318,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         if types.contains("F") {
             for spot in spots.fishing {
                 if spot.r#type == wanted {
+                    count += 1;
                     add_rect(spot, &mut svgtree);
                 }
             }
@@ -334,6 +339,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         .channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
+                e.title(format!("{} matches", count));
                 e.image("attachment://map.png");
                 e.footer(|f| {
                     f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
