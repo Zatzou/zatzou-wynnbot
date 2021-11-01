@@ -259,8 +259,17 @@ fn mean(list: &[f64]) -> f64 {
 
 #[command]
 async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
+    let cmd_args = parse_command_args(msg);
+    
+    // get resource types
+    let types = if let Some(s) = cmd_args.get(1) {
+        s.clone().trim().to_uppercase()
+    } else {
+        return gather_usage(ctx, msg).await;
+    };
+
     // get the wanted resource
-    let wanted = if let Some(s) = parse_command_args(msg).get(1) {
+    let wanted = if let Some(s) = cmd_args.get(2) {
         s.clone().trim().to_uppercase()
     } else {
         return gather_usage(ctx, msg).await;
@@ -281,24 +290,32 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         };
         let mut svgtree = usvg::Tree::create(svg);
 
-        for spot in spots.woodCutting {
-            if spot.r#type == wanted {
-                add_rect(spot, &mut svgtree);
+        if types.contains("W") {
+            for spot in spots.woodCutting {
+                if spot.r#type == wanted {
+                    add_rect(spot, &mut svgtree);
+                }
             }
         }
-        for spot in spots.mining {
-            if spot.r#type == wanted {
-                add_rect(spot, &mut svgtree);
+        if types.contains("M") {
+            for spot in spots.mining {
+                if spot.r#type == wanted {
+                    add_rect(spot, &mut svgtree);
+                }
             }
         }
-        for spot in spots.farming {
-            if spot.r#type == wanted {
-                add_rect(spot, &mut svgtree);
+        if types.contains("G") {
+            for spot in spots.farming {
+                if spot.r#type == wanted {
+                    add_rect(spot, &mut svgtree);
+                }
             }
         }
-        for spot in spots.fishing {
-            if spot.r#type == wanted {
-                add_rect(spot, &mut svgtree);
+        if types.contains("F") {
+            for spot in spots.fishing {
+                if spot.r#type == wanted {
+                    add_rect(spot, &mut svgtree);
+                }
             }
         }
 
@@ -359,7 +376,7 @@ fn add_rect(spot: GatherSpot, svgtree: &mut Tree) {
 }
 
 async fn gather_usage(ctx: &Context, msg: &Message) -> CommandResult {
-    create_error_msg(ctx, msg, "Invalid command arguments", "correct usage: .gather (material)").await;
+    create_error_msg(ctx, msg, "Invalid command arguments", "correct usage: .gather (gather type(s)) (material)\nValid types: (W)oodcutting, (M)ining, (G)rowing and (F)ishing").await;
     
     Ok(())
 }
