@@ -275,6 +275,16 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         return gather_usage(ctx, msg).await;
     };
 
+    let processingmsg = msg.channel_id
+        .send_message(&ctx.http, |m| {
+            m.embed(|e| {
+                e.title("Processing");
+                e.description("Your request is currently processing it may take a second to complete");
+                e
+            });
+            m
+        }).await?;
+
     let spots = Gather::get_gatherspots().await?;
 
     let mut out = get_mapbase()?;
@@ -334,6 +344,14 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
     // serenity wants a cow for whatever reason
     let cow = Cow::from(png_data);
 
+
+    if count == 0 {
+        // delete the processing message
+        processingmsg.delete(&ctx.http).await?;
+        create_error_msg(ctx, msg, "No matches", &format!("The current filters `{}`, `{}` did not match any known resources", types, wanted)).await;
+        return Ok(());
+    }
+
     // construct reply message
     msg
         .channel_id
@@ -354,6 +372,11 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
             m
         })
         .await?;
+    
+    // delete the processing message
+    // maybe do this with .edit instead for smoothness
+    processingmsg.delete(&ctx.http).await?;
+    
     Ok(())
 }
 
