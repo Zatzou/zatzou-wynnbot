@@ -1,11 +1,11 @@
 mod commands;
 mod error;
-mod wynn;
 mod helpers;
+mod wynn;
 
 use std::{collections::HashSet, sync::Arc};
 
-use commands::{map::*, owner::*, ping::*, id::*};
+use commands::{id::*, map::*, owner::*, ping::*};
 use serenity::{
     async_trait,
     client::bridge::gateway::ShardManager,
@@ -58,8 +58,12 @@ async fn main() {
         .with_max_level(Level::INFO)
         .init();
 
-    let token = config.get::<String>("bot.token").expect("Bot token not found in the config file");
-    let app_id = config.get::<u64>("bot.app_id").expect("App id not found in the config file");
+    let token = config
+        .get::<String>("bot.token")
+        .expect("Bot token not found in the config file");
+    let app_id = config
+        .get::<u64>("bot.app_id")
+        .expect("App id not found in the config file");
 
     let http = Http::new_with_token(&token);
 

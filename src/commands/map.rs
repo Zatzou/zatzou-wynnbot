@@ -8,8 +8,8 @@ use image::{ColorType, DynamicImage, ImageBuffer, Rgba};
 use imageproc::drawing;
 use imageproc::drawing::Canvas;
 use imageproc::rect::Rect;
-use rusttype::{Font, Scale};
 use once_cell::sync::OnceCell;
+use rusttype::{Font, Scale};
 use serenity::framework::standard::{macros::command, CommandResult};
 use serenity::http::AttachmentType;
 use serenity::model::prelude::*;
@@ -21,8 +21,8 @@ use tracing::{error, info};
 
 use crate::error::create_error_msg;
 use crate::helpers::parse_command_args;
-use crate::wynn::Gather::{self, GatherSpot};
 use crate::wynn::world::{Territories, Territory};
+use crate::wynn::Gather::{self, GatherSpot};
 use crate::{BOT_NAME, BOT_VERSION};
 use cached::proc_macro::cached;
 
@@ -34,7 +34,9 @@ fn get_mapbase() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn Error 
     let out = if let Some(pm) = MAPBASE.get() {
         pm.clone()
     } else {
-        let map: image::ImageBuffer<Rgba<u8>, Vec<u8>> = if let DynamicImage::ImageRgba8(img) = ImageReader::open("./main-map2.png")?.decode()? {
+        let map: image::ImageBuffer<Rgba<u8>, Vec<u8>> = if let DynamicImage::ImageRgba8(img) =
+            ImageReader::open("./main-map2.png")?.decode()?
+        {
             img
         } else {
             panic!("main-map2.png invalid!!!");
@@ -46,7 +48,7 @@ fn get_mapbase() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn Error 
 }
 
 // allow getting a new map every 30s otherwise use a cached one
-#[cached(time=30, result = true)]
+#[cached(time = 30, result = true)]
 async fn get_map() -> Result<Territories, reqwest::Error> {
     info!("Getting new map data from wynntils");
     let terrs: Territories = reqwest::get("https://athena.wynntils.com/cache/get/territoryList")
@@ -94,8 +96,18 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
         // hex to rgb
         let color = colorsys::Rgb::from_hex_str(&col)?;
 
-        let fillcol = Rgba([color.red() as u8, color.green() as u8, color.blue() as u8, 127]);
-        let edgecol = Rgba([color.red() as u8, color.green() as u8, color.blue() as u8, 255]);     
+        let fillcol = Rgba([
+            color.red() as u8,
+            color.green() as u8,
+            color.blue() as u8,
+            127,
+        ]);
+        let edgecol = Rgba([
+            color.red() as u8,
+            color.green() as u8,
+            color.blue() as u8,
+            255,
+        ]);
 
         let area = Rect::at(x, y).of_size(width, height);
 
@@ -118,7 +130,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
     // name rendering
     let font_data: &[u8] = include_bytes!("../../Roboto-Bold.ttf");
     let font: Font<'static> = Font::try_from_bytes(font_data).unwrap();
-    
+
     let col = Rgba([255, 255, 255, 255]);
     for (name, terrs) in guilds.iter() {
         for area in terrs {
@@ -126,7 +138,15 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
             let x_start = calc_x(loc.startX).min(calc_x(loc.endX));
             let y_start = calc_z(loc.startZ).min(calc_z(loc.endZ));
 
-            drawing::draw_text_mut(&mut out, col, x_start as u32 + 3, y_start as u32 + 3, Scale::uniform(10.0), &font, &name);
+            drawing::draw_text_mut(
+                &mut out,
+                col,
+                x_start as u32 + 3,
+                y_start as u32 + 3,
+                Scale::uniform(10.0),
+                &font,
+                &name,
+            );
         }
     }
 
@@ -188,7 +208,7 @@ fn calc_z(z: f64) -> f64 {
 #[command]
 async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
     let cmd_args = parse_command_args(msg);
-    
+
     // get resource types
     let types = if let Some(s) = cmd_args.get(1) {
         s.clone().trim().to_uppercase()
@@ -203,15 +223,19 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         return gather_usage(ctx, msg).await;
     };
 
-    let processingmsg = msg.channel_id
+    let processingmsg = msg
+        .channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
                 e.title("Processing");
-                e.description("Your request is currently processing it may take a second to complete");
+                e.description(
+                    "Your request is currently processing it may take a second to complete",
+                );
                 e
             });
             m
-        }).await?;
+        })
+        .await?;
 
     let spots = Gather::get_gatherspots().await?;
 
@@ -262,17 +286,24 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
     // serenity wants a cow for whatever reason
     let cow = Cow::from(png_data);
 
-
     if count == 0 {
         // delete the processing message
         processingmsg.delete(&ctx.http).await?;
-        create_error_msg(ctx, msg, "No matches", &format!("The current filters `{}`, `{}` did not match any known resources", types, wanted)).await;
+        create_error_msg(
+            ctx,
+            msg,
+            "No matches",
+            &format!(
+                "The current filters `{}`, `{}` did not match any known resources",
+                types, wanted
+            ),
+        )
+        .await;
         return Ok(());
     }
 
     // construct reply message
-    msg
-        .channel_id
+    msg.channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
                 e.title(format!("{} matches", count));
@@ -290,11 +321,11 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
             m
         })
         .await?;
-    
+
     // delete the processing message
     // maybe do this with .edit instead for smoothness
     processingmsg.delete(&ctx.http).await?;
-    
+
     Ok(())
 }
 
@@ -312,6 +343,6 @@ fn add_rect(spot: GatherSpot, img: &mut drawing::Blend<ImageBuffer<Rgba<u8>, Vec
 
 async fn gather_usage(ctx: &Context, msg: &Message) -> CommandResult {
     create_error_msg(ctx, msg, "Invalid command arguments", "correct usage: .gather (gather type(s)) (material)\nValid types: (W)oodcutting, (M)ining, (G)rowing and (F)ishing").await;
-    
+
     Ok(())
 }

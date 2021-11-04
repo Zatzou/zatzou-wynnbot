@@ -3,7 +3,7 @@
 /// Module containing constants for wynncraft colors
 pub mod color {
     use serenity::utils::Color;
-    
+
     pub const DEPRESSING_ITEM: Color = Color::from_rgb(170, 170, 170);
     pub const NORMAL_ITEM: Color = Color::from_rgb(255, 255, 255);
     pub const UNIQUE_ITEM: Color = Color::from_rgb(255, 255, 85);
@@ -17,7 +17,7 @@ pub mod color {
 /// Module containing structs for holding world information such as territories
 pub mod world {
     use std::collections::HashMap;
-    
+
     use serde::Deserialize;
 
     /// Struct for the wynntils territories api
@@ -54,8 +54,8 @@ pub mod world {
 pub mod items {
     use std::{collections::BTreeMap, ops::RangeInclusive};
 
-    use serenity::utils::Color;
     use serde::Deserialize;
+    use serenity::utils::Color;
 
     use crate::wynn::color;
 
@@ -68,9 +68,9 @@ pub mod items {
         LEGENDARY,
         FABLED,
         MYTHIC,
-        SET
+        SET,
     }
-    
+
     /// Item types
     #[derive(Debug, Deserialize, Clone)]
     pub enum Type {
@@ -87,7 +87,7 @@ pub mod items {
         BRACELET,
         NECKLACE,
     }
-    
+
     /// all current wynncraft identifications
     #[derive(Debug, Deserialize, PartialEq, Eq, PartialOrd, Ord, Clone, Copy)]
     pub enum Identification {
@@ -247,7 +247,7 @@ pub mod items {
         /// Wynnbuilder id for the item
         pub wynnBuilderID: Option<i32>,
     }
-    
+
     impl Item {
         /// Gets the serenity color for the item's rarity
         pub fn get_color(&self) -> Color {
@@ -359,7 +359,7 @@ pub mod items {
     }
 
     /// Struct containing a single id for an item.
-    /// 
+    ///
     /// This format is intended for deserialisation and does not contain the actual id type.
     #[derive(Debug, Deserialize, Clone)]
     pub struct StatusId {
@@ -374,7 +374,17 @@ pub mod items {
         pub groups: Vec<String>,
     }
 
-    pub const IDGROUPS: [RangeInclusive<i32>; 9] = [1..=5, 6..=11, 12..=17, 18..=22, 23..=27, 28..=31, 32..=35, 36..=42, 43..=50];
+    pub const IDGROUPS: [RangeInclusive<i32>; 9] = [
+        1..=5,
+        6..=11,
+        12..=17,
+        18..=22,
+        23..=27,
+        28..=31,
+        32..=35,
+        36..=42,
+        43..=50,
+    ];
 
     pub enum Powders {
         EARTH,
@@ -399,17 +409,18 @@ pub mod items {
 }
 
 pub mod Gather {
-    use serde::Deserialize;
     use cached::proc_macro::cached;
+    use serde::Deserialize;
     use tracing::info;
 
-    #[cached(time=3600, result = true)]
+    #[cached(time = 3600, result = true)]
     pub async fn get_gatherspots() -> Result<GatherSpots, reqwest::Error> {
         info!("Getting new gathering data from wynntils");
-        let gather: GatherSpots = reqwest::get("https://athena.wynntils.com/cache/get/gatheringSpots")
-            .await?
-            .json()
-            .await?;
+        let gather: GatherSpots =
+            reqwest::get("https://athena.wynntils.com/cache/get/gatheringSpots")
+                .await?
+                .json()
+                .await?;
         Ok(gather)
     }
 

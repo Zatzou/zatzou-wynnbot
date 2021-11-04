@@ -1,8 +1,8 @@
 use serenity::client::Context;
 use serenity::framework::standard::macros::hook;
+use serenity::framework::standard::CommandError;
 use serenity::model::channel::Message;
 use serenity::utils::Color;
-use serenity::framework::standard::CommandError;
 
 use crate::{BOT_NAME, BOT_VERSION};
 

@@ -8,10 +8,10 @@ use serenity::model::prelude::*;
 use serenity::prelude::*;
 use tokio::fs;
 
-use crate::helpers::parse_command_args;
-use crate::{BOT_NAME, BOT_VERSION};
 use crate::error::create_error_msg;
-use crate::wynn::items::{IDGROUPS, Identification, ItemList, Powders, StatusType};
+use crate::helpers::parse_command_args;
+use crate::wynn::items::{Identification, ItemList, Powders, StatusType, IDGROUPS};
+use crate::{BOT_NAME, BOT_VERSION};
 
 const START_CHAR: char = '󵿰';
 const END_CHAR: char = '󵿱';
@@ -24,18 +24,26 @@ const WATER: &str = "<:water:899382254948737077>";
 const FIRE: &str = "<:fire1:899382464882044948>";
 const AIR: &str = "<:air:899382632532570123>";
 
-static ITEMDB: OnceCell<ItemList> = OnceCell::new(); 
+static ITEMDB: OnceCell<ItemList> = OnceCell::new();
 
 #[command]
 async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     // read and parse the input string
     let mut temp = if let Some(item) = parse_command_args(msg).get(1) {
-        item.trim_start_matches(START_CHAR).trim_end_matches(END_CHAR).split_terminator(SEPARATOR)
+        item.trim_start_matches(START_CHAR)
+            .trim_end_matches(END_CHAR)
+            .split_terminator(SEPARATOR)
     } else {
-        create_error_msg(ctx, msg, "Invalid comamnd arguments", "Usage: .id (item id string)").await;
-        return Ok(())
+        create_error_msg(
+            ctx,
+            msg,
+            "Invalid comamnd arguments",
+            "Usage: .id (item id string)",
+        )
+        .await;
+        return Ok(());
     };
-    
+
     let name = if let Some(v) = temp.next() {
         v.to_string()
     } else {
@@ -49,14 +57,14 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
         return Ok(());
     }; // https://github.com/Wynntils/Wynntils/blob/development/src/main/java/com/wynntils/modules/utilities/managers/ChatItemManager.java
     let powders = temp.next();
-    
+
     // Read rerolls either from the id section or the powder section
     let rerolls = if let Some(powders) = powders {
         powders.chars().last().unwrap() as i32 - OFFSET
     } else {
         ids.chars().last().unwrap() as i32 - OFFSET
     };
-    
+
     // get the list of all items and cache them after the first time
     let itemlist = if let Some(db) = ITEMDB.get() {
         db
@@ -66,12 +74,18 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
         ITEMDB.get().unwrap()
     };
     let items = &itemlist.items;
-    
+
     // find the item and make sure it exists
     let item = if let Some(item) = items.iter().find(|f| f.displayName == name) {
         item
     } else {
-        create_error_msg(ctx, msg, "Invalid item", "the given item was not found in the current database").await;
+        create_error_msg(
+            ctx,
+            msg,
+            "Invalid item",
+            "the given item was not found in the current database",
+        )
+        .await;
         return Ok(());
     };
 
@@ -188,12 +202,15 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     let mut finalids = BTreeMap::new();
     for (id, ord) in itemlist.identificationOrder.order.iter() {
         if let Some(sid) = item.statuses.get(id) {
-            finalids.insert(ord, Id {
-                id: *id,
-                idtype: sid.r#type,
-                fixed: sid.isFixed,
-                baseval: sid.baseValue,
-            });
+            finalids.insert(
+                ord,
+                Id {
+                    id: *id,
+                    idtype: sid.r#type,
+                    fixed: sid.isFixed,
+                    baseval: sid.baseValue,
+                },
+            );
         }
     }
 
@@ -207,17 +224,22 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
                 desc.push('\n')
             }
         }
-        
+
         let end = match id.idtype {
             StatusType::PERCENTAGE => "%",
             StatusType::INTEGER => "",
             StatusType::TIER => "",
             StatusType::FOUR_SECONDS => "/4s",
-            StatusType::THREE_SECONDS => "/3s"
+            StatusType::THREE_SECONDS => "/3s",
         };
-        
+
         if id.fixed {
-            desc.push_str(&format!("{}{} {}\n", formatnum(id.baseval), end, id.id.name()));
+            desc.push_str(&format!(
+                "{}{} {}\n",
+                formatnum(id.baseval),
+                end,
+                id.id.name()
+            ));
             ididx -= 1;
         } else {
             let idstats = ids[ididx as usize];
@@ -234,13 +256,21 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
                 value = encodedval + id.min_id();
             }
 
-            prosentti = ((value as f64 - id.min_id() as f64) / (id.max_id() as f64 - id.min_id() as f64)) * 100.0;
+            prosentti = ((value as f64 - id.min_id() as f64)
+                / (id.max_id() as f64 - id.min_id() as f64))
+                * 100.0;
 
             if id.fixed || (-1 <= id.baseval && id.baseval <= 1) {
                 desc.push_str(&format!("{}{} {}\n", formatnum(value), end, id.id.name()));
                 idprosentit.push(100.0);
             } else {
-                desc.push_str(&format!("{}{} {} [{:.3}%]\n", formatnum(value), end, id.id.name(), prosentti));
+                desc.push_str(&format!(
+                    "{}{} {} [{:.3}%]\n",
+                    formatnum(value),
+                    end,
+                    id.id.name(),
+                    prosentti
+                ));
                 idprosentit.push(prosentti);
             }
         }
@@ -253,8 +283,11 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     }
 
     desc.push('\n');
-    
-    desc.push_str(&format!("[{}/{}] Powder Slots", powdercount, item.powderAmount));
+
+    desc.push_str(&format!(
+        "[{}/{}] Powder Slots",
+        powdercount, item.powderAmount
+    ));
 
     if powdercount != 0 {
         desc.push('[');
@@ -273,7 +306,12 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
 
     // Footer with ids
     if rerolls != 0 {
-        desc.push_str(&format!("{} {} [{}]", item.get_rarity(), item.get_type(), rerolls));
+        desc.push_str(&format!(
+            "{} {} [{}]",
+            item.get_rarity(),
+            item.get_type(),
+            rerolls
+        ));
     } else {
         desc.push_str(&format!("{} {}", item.get_rarity(), item.get_type()));
     }
@@ -281,7 +319,10 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     // make item name with id % if needed
     let mut itemname = item.displayName.clone();
     if !idprosentit.is_empty() {
-        itemname.push_str(&format!(" [{:.3}%]", idprosentit.iter().sum::<f64>() / idprosentit.len() as f64))
+        itemname.push_str(&format!(
+            " [{:.3}%]",
+            idprosentit.iter().sum::<f64>() / idprosentit.len() as f64
+        ))
     }
 
     // send final message
@@ -302,7 +343,10 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
                     ar.create_button(|b| {
                         b.style(ButtonStyle::Link);
                         b.label("Open item on Wynnbuilder");
-                        b.url(format!("https://wynnbuilder.github.io/item.html#{}", &item.displayName.replace(" ", "%20")));
+                        b.url(format!(
+                            "https://wynnbuilder.github.io/item.html#{}",
+                            &item.displayName.replace(" ", "%20")
+                        ));
                         b.disabled(false);
                         b
                     });
@@ -356,9 +400,17 @@ fn formatnum(num: i32) -> String {
 async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
     // read and parse the input string
     let mut temp = if let Some(item) = parse_command_args(msg).get(1) {
-        item.trim_start_matches(START_CHAR).trim_end_matches(END_CHAR).split_terminator(SEPARATOR)
+        item.trim_start_matches(START_CHAR)
+            .trim_end_matches(END_CHAR)
+            .split_terminator(SEPARATOR)
     } else {
-        create_error_msg(ctx, msg, "Invalid comamnd arguments", "Usage: .maxid (wynntils item id string or item name)").await;
+        create_error_msg(
+            ctx,
+            msg,
+            "Invalid comamnd arguments",
+            "Usage: .maxid (wynntils item id string or item name)",
+        )
+        .await;
         return Ok(());
     };
     let name = if let Some(v) = temp.next() {
@@ -367,7 +419,7 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
         create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
         return Ok(());
     };
-    
+
     // get the list of all items and cache them after the first time
     let itemlist = if let Some(db) = ITEMDB.get() {
         db
@@ -382,30 +434,39 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
     let item = if let Some(item) = items.iter().find(|f| f.displayName == name) {
         item
     } else {
-        create_error_msg(ctx, msg, "Invalid item", "the given item was not found in the current database").await;
+        create_error_msg(
+            ctx,
+            msg,
+            "Invalid item",
+            "the given item was not found in the current database",
+        )
+        .await;
         return Ok(());
     };
-    
+
     // sort ids so their read correctly
     let mut finalids = BTreeMap::new();
     for (id, ord) in itemlist.identificationOrder.order.iter() {
         if let Some(sid) = item.statuses.get(id) {
-            finalids.insert(ord, Id {
-                id: *id,
-                idtype: sid.r#type,
-                fixed: sid.isFixed,
-                baseval: sid.baseValue,
-            });
+            finalids.insert(
+                ord,
+                Id {
+                    id: *id,
+                    idtype: sid.r#type,
+                    fixed: sid.isFixed,
+                    baseval: sid.baseValue,
+                },
+            );
         }
     }
-    
+
     let mut perfids: String = String::new();
 
     for (_, id) in finalids.iter() {
         if id.fixed {
             continue;
         }
-        
+
         let value;
         if i32::abs(id.baseval) > 100 {
             value = f64::round((id.max_id() as f64 * 100.0 / id.baseval as f64) - 30.0) as i32;
@@ -422,7 +483,8 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
         .send_message(&ctx.http, |m| {
             m.content(output);
             m
-        }).await?;
+        })
+        .await?;
 
     Ok(())
 }
