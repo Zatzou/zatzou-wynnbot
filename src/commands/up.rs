@@ -7,6 +7,7 @@ use tracing::info;
 use serde::Deserialize;
 use cached::proc_macro::cached;
 
+use crate::error::create_error_msg;
 use crate::helpers::parse_command_args;
 
 #[cached(time = 300, result = true)]
@@ -56,6 +57,8 @@ async fn up(ctx: &Context, msg: &Message) -> CommandResult {
         server_list(ctx, msg).await?;
     } else {
         let server: i32 = cmd_args.get(1).unwrap().parse()?;
+
+        single_server(ctx, msg, server).await?;
     }
     
     Ok(())
@@ -79,6 +82,34 @@ async fn server_list(ctx: &Context, msg: &Message) -> CommandResult {
             });
             m
         }).await?;
+
+    Ok(())
+}
+
+async fn single_server(ctx: &Context, msg: &Message, servernum: i32) -> CommandResult {
+    let servers = get_servers().await?;
+
+    let server = servers.into_iter().find(|s| s.name.trim() == format!("WC{}", servernum).trim());
+
+    if let Some(server) = server {
+        let mut plist = String::new();
+
+        for name in server.players {
+            plist.push_str(&[&name, "\n"].concat());
+        }
+
+        msg.channel_id
+        .send_message(&ctx.http, |m| {
+            m.add_embed(|e| {
+                e.title(&format!("WC{}", servernum));
+                e.description(&format!("The server WC{} started <t:{}:R>\nIt has been running since <t:{}:T>\n\nPlayer list\n```\n{}```", servernum, server.started / 1000, server.started / 1000, plist));
+                e
+            });
+            m
+        }).await?;
+    } else {
+        create_error_msg(ctx, msg, "Server not found", "The given server is either not online or it is newer than 5 minutes").await;
+    }
 
     Ok(())
 }
