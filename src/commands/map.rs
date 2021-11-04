@@ -1,5 +1,4 @@
 use std::borrow::Cow;
-use std::collections::HashMap;
 use std::error::Error;
 
 use crc32fast::Hasher;
@@ -17,11 +16,11 @@ use serenity::prelude::*;
 
 use image::io::Reader as ImageReader;
 
-use tracing::{error, info};
+use tracing::info;
 
 use crate::error::create_error_msg;
 use crate::helpers::parse_command_args;
-use crate::wynn::world::{Territories, Territory};
+use crate::wynn::world::Territories;
 use crate::wynn::Gather::{self, GatherSpot};
 use crate::{BOT_NAME, BOT_VERSION};
 use cached::proc_macro::cached;
@@ -60,6 +59,20 @@ async fn get_map() -> Result<Territories, reqwest::Error> {
 
 #[command]
 async fn map(ctx: &Context, msg: &Message) -> CommandResult {
+    let processingmsg = msg
+        .channel_id
+        .send_message(&ctx.http, |m| {
+            m.embed(|e| {
+                e.title("Processing");
+                e.description(
+                    "Your request is currently processing it may take a second to complete",
+                );
+                e
+            });
+            m
+        })
+        .await?;
+    
     // load territory data from wynntils api
     let terrs = get_map().await?;
 
@@ -148,7 +161,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
     let cow = Cow::from(png_data);
 
     // construct reply message
-    let msg = msg
+    msg
         .channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
@@ -165,11 +178,10 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
             });
             m
         })
-        .await;
+        .await?;
 
-    if let Err(why) = msg {
-        error!("Error sending message: {:?}", why);
-    }
+    processingmsg.delete(&ctx.http).await?;
+    
     Ok(())
 }
 
