@@ -66,6 +66,10 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
     // ouput image
     let mut out = drawing::Blend(get_mapbase()?);
 
+    // name rendering stuff
+    let font_data: &[u8] = include_bytes!("../../Roboto-Bold.ttf");
+    let font: Font<'static> = Font::try_from_bytes(font_data).unwrap();
+
     // go thru all territories and render the rects for them
     for (_, terr) in terrs.territories.iter() {
         let loc = &terr.location;
@@ -113,41 +117,24 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
 
         drawing::draw_filled_rect_mut(&mut out, area, fillcol);
         drawing::draw_hollow_rect_mut(&mut out, area, edgecol);
-    }
 
-    let mut guilds: HashMap<String, Vec<Territory>> = HashMap::new();
+        // maybe find a nice way to get a good color for this
+        let textcol = Rgba([
+            255,
+            255,
+            255,
+            255,
+        ]);
 
-    for (_name, terr) in terrs.territories.into_iter() {
-        if let Some(t) = guilds.get_mut(&terr.guildPrefix) {
-            t.push(terr);
-        } else {
-            let guild = terr.guildPrefix.clone();
-            let vec: Vec<Territory> = Vec::from([terr]);
-            guilds.insert(guild, vec);
-        };
-    }
-
-    // name rendering
-    let font_data: &[u8] = include_bytes!("../../Roboto-Bold.ttf");
-    let font: Font<'static> = Font::try_from_bytes(font_data).unwrap();
-
-    let col = Rgba([255, 255, 255, 255]);
-    for (name, terrs) in guilds.iter() {
-        for area in terrs {
-            let loc = &area.location;
-            let x_start = calc_x(loc.startX).min(calc_x(loc.endX));
-            let y_start = calc_z(loc.startZ).min(calc_z(loc.endZ));
-
-            drawing::draw_text_mut(
-                &mut out,
-                col,
-                x_start as u32 + 3,
-                y_start as u32 + 3,
-                Scale::uniform(10.0),
-                &font,
-                name,
-            );
-        }
+        drawing::draw_text_mut(
+            &mut out,
+            textcol,
+            x as u32 + 3,
+            y as u32 + 3,
+            Scale::uniform((width as f32 / 2.5).min(height as f32 / 1.5)),
+            &font,
+            &terr.guildPrefix,
+        );
     }
 
     // encode png
