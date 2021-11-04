@@ -5,7 +5,7 @@ mod wynn;
 
 use std::{collections::HashSet, sync::Arc};
 
-use commands::{id::*, map::*, owner::*, ping::*};
+use commands::{id::*, map::*, owner::*, ping::*, up::*};
 use serenity::{
     async_trait,
     client::bridge::gateway::ShardManager,
@@ -39,7 +39,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(ping, quit, map, id, maxid, gather)]
+#[commands(ping, quit, map, id, maxid, gather, up)]
 struct General;
 
 #[tokio::main]
