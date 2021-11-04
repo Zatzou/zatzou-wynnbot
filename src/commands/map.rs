@@ -145,7 +145,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
                 y_start as u32 + 3,
                 Scale::uniform(10.0),
                 &font,
-                &name,
+                name,
             );
         }
     }
@@ -211,14 +211,14 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
 
     // get resource types
     let types = if let Some(s) = cmd_args.get(1) {
-        s.clone().trim().to_uppercase()
+        s.trim().to_uppercase()
     } else {
         return gather_usage(ctx, msg).await;
     };
 
     // get the wanted resource
     let wanted = if let Some(s) = cmd_args.get(2) {
-        s.clone().trim().to_uppercase()
+        s.trim().to_uppercase()
     } else {
         return gather_usage(ctx, msg).await;
     };
@@ -243,7 +243,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
 
     let mut count = 0;
 
-    if types.contains("W") {
+    if types.contains('W') {
         for spot in spots.woodCutting {
             if spot.r#type == wanted {
                 count += 1;
@@ -251,7 +251,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
             }
         }
     }
-    if types.contains("M") {
+    if types.contains('M') {
         for spot in spots.mining {
             if spot.r#type == wanted {
                 count += 1;
@@ -259,7 +259,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
             }
         }
     }
-    if types.contains("G") {
+    if types.contains('G') {
         for spot in spots.farming {
             if spot.r#type == wanted {
                 count += 1;
@@ -267,7 +267,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
             }
         }
     }
-    if types.contains("F") {
+    if types.contains('F') {
         for spot in spots.fishing {
             if spot.r#type == wanted {
                 count += 1;

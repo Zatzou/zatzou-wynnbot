@@ -1,4 +1,4 @@
-#![allow(non_snake_case, non_camel_case_types, dead_code)]
+#![allow(non_snake_case, non_camel_case_types, dead_code, clippy::upper_case_acronyms)]
 
 /// Module containing constants for wynncraft colors
 pub mod color {

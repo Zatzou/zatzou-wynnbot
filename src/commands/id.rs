@@ -293,11 +293,11 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
         desc.push('[');
         for p in parsedpowders {
             match p {
-                Powders::EARTH => desc.push_str(&EARTH),
-                Powders::THUNDER => desc.push_str(&THUNDER),
-                Powders::WATER => desc.push_str(&WATER),
-                Powders::FIRE => desc.push_str(&FIRE),
-                Powders::AIR => desc.push_str(&AIR),
+                Powders::EARTH => desc.push_str(EARTH),
+                Powders::THUNDER => desc.push_str(THUNDER),
+                Powders::WATER => desc.push_str(WATER),
+                Powders::FIRE => desc.push_str(FIRE),
+                Powders::AIR => desc.push_str(AIR),
             }
         }
         desc.push(']');
