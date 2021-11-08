@@ -1,0 +1,7 @@
+[bot] # basic bot information
+token = "DISCORD TOKEN HERE"
+app_id = 1234567890
+
+[image] # Image options
+# quality of .webp images uploaded to discord
+webp_quality = 80

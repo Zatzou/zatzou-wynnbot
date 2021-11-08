@@ -3,7 +3,7 @@ mod error;
 mod helpers;
 mod wynn;
 
-use std::{collections::HashSet, sync::Arc};
+use std::{collections::HashSet, sync::{Arc, atomic::AtomicU8}};
 
 use commands::{id::*, map::*, owner::*, ping::*, up::*};
 use serenity::{
@@ -14,10 +14,13 @@ use serenity::{
     model::{event::ResumedEvent, gateway::Ready},
     prelude::*,
 };
-use tracing::{error, info, Level};
+use tracing::{Level, error, info, warn};
 
 pub const BOT_NAME: &str = "Zatzoubot";
 pub const BOT_VERSION: &str = "0.1.0";
+
+/// Quality level used for .webp exports set from config
+pub static WEBP_QUALITY: AtomicU8 = AtomicU8::new(80);
 
 pub struct ShardManagerContainer;
 
@@ -57,6 +60,12 @@ async fn main() {
     tracing_subscriber::fmt::fmt()
         .with_max_level(Level::INFO)
         .init();
+
+    if let Ok(q) = config.get::<u8>("image.webp_quality") {
+        WEBP_QUALITY.store(q, std::sync::atomic::Ordering::Relaxed);
+    } else {
+        warn!("option image.webp_quality not set in config.toml! Using default of 80 instead for .webp export quality")
+    }
 
     let token = config
         .get::<String>("bot.token")
