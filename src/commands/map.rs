@@ -32,13 +32,34 @@ fn get_mapbase() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn Error 
         pm.clone()
     } else {
         let map: image::ImageBuffer<Rgba<u8>, Vec<u8>> = if let DynamicImage::ImageRgba8(img) =
-            ImageReader::open("./main-map2.png")?.decode()?
+            ImageReader::open("./main-map.png")?.decode()?
         {
             img
         } else {
-            panic!("main-map2.png invalid!!!");
+            panic!("main-map.png invalid!!!");
         };
         MAPBASE.set(map.clone()).unwrap();
+        map
+    };
+    Ok(out)
+}
+
+/// Static for the gray image file so we don't have to load it every time
+static MAPBASE_GRAY: OnceCell<image::ImageBuffer<Rgba<u8>, Vec<u8>>> = OnceCell::new();
+
+/// Helper function for getting the base map
+fn get_mapbase_gray() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn Error + Send + Sync>> {
+    let out = if let Some(pm) = MAPBASE_GRAY.get() {
+        pm.clone()
+    } else {
+        let map: image::ImageBuffer<Rgba<u8>, Vec<u8>> = if let DynamicImage::ImageRgba8(img) =
+            ImageReader::open("./main-map-gray.png")?.decode()?
+        {
+            img
+        } else {
+            panic!("main-map-gray.png invalid!!!");
+        };
+        MAPBASE_GRAY.set(map.clone()).unwrap();
         map
     };
     Ok(out)
@@ -241,7 +262,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
 
     let spots = Gather::get_gatherspots().await?;
 
-    let mut out = drawing::Blend(get_mapbase()?);
+    let mut out = drawing::Blend(get_mapbase_gray()?);
 
     let mut count = 0;
 
@@ -342,7 +363,7 @@ fn add_rect(spot: GatherSpot, img: &mut drawing::Blend<ImageBuffer<Rgba<u8>, Vec
     let x = calc_x(spot.location.x) as i32;
     let y = calc_z(spot.location.z) as i32;
 
-    let rect = Rect::at(x - 2, y - 2).of_size(4, 4);
+    let rect = Rect::at(x - 3, y - 3).of_size(5, 5);
 
     // create the element
     drawing::draw_filled_rect_mut(img, rect, SPOTCOL);
