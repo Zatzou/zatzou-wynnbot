@@ -9,7 +9,7 @@ use serenity::prelude::*;
 use tokio::fs;
 
 use crate::error::create_error_msg;
-use crate::helpers::parse_command_args;
+use crate::helpers::{parse_command_args, parse_command_args_raw};
 use crate::wynn::items::{Identification, ItemList, Powders, StatusType, IDGROUPS};
 use crate::{BOT_NAME, BOT_VERSION};
 
@@ -29,7 +29,7 @@ static ITEMDB: OnceCell<ItemList> = OnceCell::new();
 #[command]
 async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     // read and parse the input string
-    let mut temp = if let Some(item) = parse_command_args(msg).get(1) {
+    let mut temp = if let Some(item) = parse_command_args_raw(msg) {
         item.trim_start_matches(START_CHAR)
             .trim_end_matches(END_CHAR)
             .split_terminator(SEPARATOR)
