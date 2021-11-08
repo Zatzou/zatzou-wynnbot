@@ -69,7 +69,7 @@ async fn server_list(ctx: &Context, msg: &Message) -> CommandResult {
 
     let mut desc = String::new();
     
-    desc.push_str("```");
+    desc.push_str("```css\n");
 
     for server in servers {
         let times = parse_timestamp(server.started);
