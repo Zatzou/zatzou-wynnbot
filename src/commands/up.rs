@@ -73,7 +73,11 @@ async fn server_list(ctx: &Context, msg: &Message) -> CommandResult {
 
     for server in servers {
         let times = parse_timestamp(server.started);
-        desc.push_str(&format!("{:<4} | {:>2} | {}h {:>2}m\n", server.name, server.players.len(), times.0, times.1));
+        if times.0 == 0 {
+            desc.push_str(&format!("{:<4} | {:>2} |    {:>2}m\n", server.name, server.players.len(), times.1));    
+        } else {
+            desc.push_str(&format!("{:<4} | {:>2} | {}h {:>2}m\n", server.name, server.players.len(), times.0, times.1));
+        }
     }
 
     desc.push_str(&format!("```\nData from <t:{}:R>", chrono::offset::Utc::now().timestamp()));
