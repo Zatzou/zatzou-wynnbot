@@ -2,10 +2,8 @@ use std::borrow::Cow;
 use std::error::Error;
 
 use crc32fast::Hasher;
-use image::png::PngEncoder;
-use image::{ColorType, DynamicImage, ImageBuffer, Rgba};
+use image::{DynamicImage, ImageBuffer, Rgba};
 use imageproc::drawing;
-use imageproc::drawing::Canvas;
 use imageproc::rect::Rect;
 use once_cell::sync::OnceCell;
 use rusttype::{Font, Scale};
@@ -150,22 +148,27 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
         );
     }
 
-    // encode png
-    let mut png_data: Vec<u8> = Vec::new();
+    // encode image as webp of quality 80
+    let img_data: Vec<u8>;
+    
+    {
+        let img = &DynamicImage::ImageRgba8(out.0);
 
-    let encoder = PngEncoder::new(&mut png_data);
-    let size = out.dimensions();
-    encoder.encode(&out.0, size.0, size.1, ColorType::Rgba8)?;
+        let encoder = webp::Encoder::from_image(img)?;
+        let encoded = encoder.encode(80.0);
+        
+        img_data = (*encoded).to_vec();
+    }
 
     // serenity wants a cow for whatever reason
-    let cow = Cow::from(png_data);
+    let cow = Cow::from(img_data);
 
     // construct reply message
     msg
         .channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
-                e.image("attachment://map.png");
+                e.image("attachment://map.webp");
                 e.footer(|f| {
                     f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
                     f
@@ -174,7 +177,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
             });
             m.add_file(AttachmentType::Bytes {
                 data: cow,
-                filename: String::from("map.png"),
+                filename: String::from("map.webp"),
             });
             m
         })
@@ -275,15 +278,20 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         }
     }
 
-    // encode png
-    let mut png_data: Vec<u8> = Vec::new();
+    // encode image as webp of quality 80
+    let img_data: Vec<u8>;
+    
+    {
+        let img = &DynamicImage::ImageRgba8(out.0);
 
-    let encoder = PngEncoder::new(&mut png_data);
-    let size = out.dimensions();
-    encoder.encode(&out.0, size.0, size.1, ColorType::Rgba8)?;
+        let encoder = webp::Encoder::from_image(img)?;
+        let encoded = encoder.encode(80.0);
+        
+        img_data = (*encoded).to_vec();
+    }
 
     // serenity wants a cow for whatever reason
-    let cow = Cow::from(png_data);
+    let cow = Cow::from(img_data);
 
     if count == 0 {
         // delete the processing message
@@ -306,7 +314,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
                 e.title(format!("{} matches", count));
-                e.image("attachment://map.png");
+                e.image("attachment://map.webp");
                 e.footer(|f| {
                     f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
                     f
@@ -315,7 +323,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
             });
             m.add_file(AttachmentType::Bytes {
                 data: cow,
-                filename: String::from("map.png"),
+                filename: String::from("map.webp"),
             });
             m
         })
