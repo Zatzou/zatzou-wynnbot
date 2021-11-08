@@ -69,9 +69,14 @@ async fn server_list(ctx: &Context, msg: &Message) -> CommandResult {
 
     let mut desc = String::new();
     
+    desc.push_str("```");
+
     for server in servers {
-        desc.push_str(&format!("`{:<4} | {:>2} |` <t:{}:R>\n", server.name, server.players.len(), server.started / 1000));
+        let times = parse_timestamp(server.started);
+        desc.push_str(&format!("{:<4} | {:>2} | {}h {:>2}m\n", server.name, server.players.len(), times.0, times.1));
     }
+
+    desc.push_str(&format!("```\nData from <t:{}:R>", chrono::offset::Utc::now().timestamp()));
 
     msg.channel_id
         .send_message(&ctx.http, |m| {
@@ -112,4 +117,17 @@ async fn single_server(ctx: &Context, msg: &Message, servernum: i32) -> CommandR
     }
 
     Ok(())
+}
+
+fn parse_timestamp(timestamp: i64) -> (i64, i64) {
+    let now = chrono::offset::Utc::now().timestamp();
+    // divide the original timestamp by 1000 to get the actual time since wynntils uses milliseconds
+    let timestamp = timestamp / 1000;
+
+    let uptime = now - timestamp;
+
+    let hours = uptime / 3600;
+    let minutes = (uptime % 3600) / 60;
+
+    (hours, minutes)
 }
