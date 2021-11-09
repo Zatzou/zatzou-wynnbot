@@ -1,4 +1,5 @@
 #![allow(non_snake_case, non_camel_case_types, dead_code, clippy::upper_case_acronyms)]
+//! Module for wynncraft type definitions
 
 /// Module containing constants for wynncraft colors
 pub mod color {
@@ -316,6 +317,7 @@ pub mod items {
         pub r#type: Type,
     }
 
+    /// requirements of an item
     #[derive(Debug, Deserialize, Clone)]
     pub struct Requirements {
         pub level: Option<i32>,
@@ -368,12 +370,14 @@ pub mod items {
         pub baseValue: i32,
     }
 
+    /// Struct for holding the order of identifications as defied by the wynntils api
     #[derive(Debug, Deserialize, Clone)]
     pub struct IdentificationOrder {
         pub order: BTreeMap<Identification, i32>,
         pub groups: Vec<String>,
     }
 
+    /// Groups for ids this should probably not be hardcoded but neither should many other things here
     pub const IDGROUPS: [RangeInclusive<i32>; 9] = [
         1..=5,
         6..=11,
@@ -386,6 +390,7 @@ pub mod items {
         43..=50,
     ];
 
+    /// Powder types
     pub enum Powders {
         EARTH,
         THUNDER,
@@ -408,11 +413,13 @@ pub mod items {
     }
 }
 
+/// Module for gather information
 pub mod Gather {
     use cached::proc_macro::cached;
     use serde::Deserialize;
     use tracing::info;
 
+    /// Helper function to get and cache the gatherspots from the wynntils api
     #[cached(time = 3600, result = true)]
     pub async fn get_gatherspots() -> Result<GatherSpots, reqwest::Error> {
         info!("Getting new gathering data from wynntils");
@@ -443,5 +450,52 @@ pub mod Gather {
     pub struct Location {
         pub x: f64,
         pub z: f64,
+    }
+}
+
+/// Module for server related things
+pub mod Servers {
+    use std::collections::HashMap;
+
+    use tracing::info;
+    use serde::Deserialize;
+    use cached::proc_macro::cached;
+
+    /// Function for getting the current servers with their uptimes from the wynntils api
+    #[cached(time = 300, result = true)]
+    pub async fn get_servers() -> Result<Vec<ParsedServer>, reqwest::Error> {
+        info!("Getting new server data from wynntils");
+        let servers: ServerList = reqwest::get("https://athena.wynntils.com/cache/get/serverList")
+            .await?
+            .json()
+            .await?;
+        let mut parsed = Vec::new();
+        for (k, v) in servers.servers.into_iter() {
+            parsed.push(ParsedServer {
+                name: k,
+                started: v.firstSeen,
+                players: v.players,
+            })
+        }
+        Ok(parsed)
+    }
+
+    #[derive(Clone, Deserialize)]
+    pub struct ServerList {
+        pub servers: HashMap<String, Server>,
+    }
+
+    #[derive(Clone, Deserialize)]
+    #[allow(non_snake_case)]
+    pub struct Server {
+        pub firstSeen: i64,
+        pub players: Vec<String>,
+    }
+
+    #[derive(Clone, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct ParsedServer {
+        pub name: String,
+        pub started: i64,
+        pub players: Vec<String>
     }
 }
