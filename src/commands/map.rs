@@ -125,24 +125,22 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
 
         // guild color calculations
         let col = if !terr.guildColor.is_empty() {
-            terr.guildColor[1..].to_owned()
+            let col = hex::decode(terr.guildColor[1..].to_owned())?;
+            (col[0],col[1],col[2])
         } else {
-            hex::encode(guild_color(terr.guild.clone()).to_ne_bytes())[0..=5].to_owned()
+            guild_color(terr.guild.clone())
         };
 
-        // hex to rgb
-        let color = colorsys::Rgb::from_hex_str(&col)?;
-
         let fillcol = Rgba([
-            color.red() as u8,
-            color.green() as u8,
-            color.blue() as u8,
+            col.0,
+            col.1,
+            col.2,
             127,
         ]);
         let edgecol = Rgba([
-            color.red() as u8,
-            color.green() as u8,
-            color.blue() as u8,
+            col.0,
+            col.1,
+            col.2,
             255,
         ]);
 
@@ -212,13 +210,15 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
 
 /// Gets the guilds color from it's name
 #[cached]
-fn guild_color(name: String) -> u32 {
+fn guild_color(name: String) -> (u8, u8, u8) {
     // hash the guilds nane with crc32
     let mut hasher = Hasher::new();
     hasher.update(name.as_bytes());
     let hash = hasher.finalize();
-    // bitwise and it with 0xFFFFFF cuz wynntils did it like that
-    hash & 0xFFFFFF
+    
+    let bytes: Vec<u8> = hash.to_ne_bytes().into_iter().rev().collect();
+    
+    (bytes[1],bytes[2],bytes[3])
 }
 
 fn calc_x(x: f64) -> f64 {
@@ -300,21 +300,6 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         }
     }
 
-    // encode image as webp
-    let img_data: Vec<u8>;
-    
-    {
-        let img = &DynamicImage::ImageRgba8(out.0);
-
-        let encoder = webp::Encoder::from_image(img)?;
-        let encoded = encoder.encode(WEBP_QUALITY.load(Ordering::Relaxed) as f32);
-        
-        img_data = (*encoded).to_vec();
-    }
-
-    // serenity wants a cow for whatever reason
-    let cow = Cow::from(img_data);
-
     if count == 0 {
         // delete the processing message
         processingmsg.delete(&ctx.http).await?;
@@ -330,6 +315,22 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         .await;
         return Ok(());
     }
+
+
+    // encode image as webp
+    let img_data: Vec<u8>;
+    
+    {
+        let img = &DynamicImage::ImageRgba8(out.0);
+
+        let encoder = webp::Encoder::from_image(img)?;
+        let encoded = encoder.encode(WEBP_QUALITY.load(Ordering::Relaxed) as f32);
+        
+        img_data = (*encoded).to_vec();
+    }
+
+    // serenity wants a cow for whatever reason
+    let cow = Cow::from(img_data);
 
     // construct reply message
     msg.channel_id
@@ -352,7 +353,6 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         .await?;
 
     // delete the processing message
-    // maybe do this with .edit instead for smoothness
     processingmsg.delete(&ctx.http).await?;
 
     Ok(())
