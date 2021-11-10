@@ -193,6 +193,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
                     f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
                     f
                 });
+                e.timestamp(chrono::Utc::now().to_rfc3339());
                 e
             });
             m.add_file(AttachmentType::Bytes {

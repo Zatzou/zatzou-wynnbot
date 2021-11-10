@@ -45,13 +45,14 @@ async fn server_list(ctx: &Context, msg: &Message) -> CommandResult {
         }
     }
 
-    desc.push_str(&format!("```\nData from <t:{}:R>", chrono::offset::Utc::now().timestamp()));
+    desc.push_str("```");
 
     msg.channel_id
         .send_message(&ctx.http, |m| {
             m.add_embed(|e| {
                 e.title("Server | Players | Uptime");
                 e.description(desc);
+                e.timestamp(chrono::Utc::now().to_rfc3339());
                 e
             });
             m
@@ -72,11 +73,14 @@ async fn single_server(ctx: &Context, msg: &Message, servernum: i32) -> CommandR
             plist.push_str(&[&name, "\n"].concat());
         }
 
+        let times = parse_timestamp(server.started);
+
         msg.channel_id
         .send_message(&ctx.http, |m| {
             m.add_embed(|e| {
                 e.title(&format!("WC{}", servernum));
-                e.description(&format!("The server WC{} started <t:{}:R>\nIt has been running since <t:{}:T>\n\nPlayer list\n```\n{}```", servernum, server.started / 1000, server.started / 1000, plist));
+                e.description(&format!("The server WC{} started <t:{}:T>\nIt has been running for `{}h {:>2}m {:>2}s`\n\nPlayer list\n```\n{}```", servernum, server.started / 1000, times.0, times.1, times.2, plist));
+                e.timestamp(chrono::Utc::now().to_rfc3339());
                 e
             });
             m
@@ -88,7 +92,7 @@ async fn single_server(ctx: &Context, msg: &Message, servernum: i32) -> CommandR
     Ok(())
 }
 
-fn parse_timestamp(timestamp: i64) -> (i64, i64) {
+fn parse_timestamp(timestamp: i64) -> (i64, i64, i64) {
     let now = chrono::offset::Utc::now().timestamp();
     // divide the original timestamp by 1000 to get the actual time since wynntils uses milliseconds
     let timestamp = timestamp / 1000;
@@ -97,6 +101,7 @@ fn parse_timestamp(timestamp: i64) -> (i64, i64) {
 
     let hours = uptime / 3600;
     let minutes = (uptime % 3600) / 60;
+    let seconds = uptime % 60;
 
-    (hours, minutes)
+    (hours, minutes, seconds)
 }
