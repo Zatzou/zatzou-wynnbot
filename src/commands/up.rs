@@ -1,5 +1,5 @@
-use serenity::{client::Context, framework::standard::CommandResult, model::channel::Message};
 use serenity::framework::standard::macros::command;
+use serenity::{client::Context, framework::standard::CommandResult, model::channel::Message};
 
 use crate::error::create_error_msg;
 use crate::helpers::parse_command_args;
@@ -9,20 +9,26 @@ use crate::wynn::Servers::*;
 #[command]
 async fn up(ctx: &Context, msg: &Message) -> CommandResult {
     let cmd_args = parse_command_args(msg);
-    
+
     if cmd_args.len() == 1 {
         server_list(ctx, msg).await?;
     } else {
         let server: i32 = if let Ok(n) = cmd_args.get(1).unwrap().parse() {
             n
         } else {
-            create_error_msg(ctx, msg, "Invalid server id", &format!("`{}` is not a valid number", cmd_args.get(1).unwrap())).await;
-            return Ok(())
+            create_error_msg(
+                ctx,
+                msg,
+                "Invalid server id",
+                &format!("`{}` is not a valid number", cmd_args.get(1).unwrap()),
+            )
+            .await;
+            return Ok(());
         };
 
         single_server(ctx, msg, server).await?;
     }
-    
+
     Ok(())
 }
 
@@ -33,15 +39,26 @@ async fn server_list(ctx: &Context, msg: &Message) -> CommandResult {
     servers.reverse();
 
     let mut desc = String::new();
-    
+
     desc.push_str("```css\n");
 
     for server in servers {
         let times = parse_timestamp(server.started);
         if times.0 == 0 {
-            desc.push_str(&format!("{:>4} | {:>2} |      {:>2}m\n", server.name, server.players.len(), times.1));    
+            desc.push_str(&format!(
+                "{:>4} | {:>2} |      {:>2}m\n",
+                server.name,
+                server.players.len(),
+                times.1
+            ));
         } else {
-            desc.push_str(&format!("{:>4} | {:>2} |  {}h  {:>2}m\n", server.name, server.players.len(), times.0, times.1));
+            desc.push_str(&format!(
+                "{:>4} | {:>2} |  {}h  {:>2}m\n",
+                server.name,
+                server.players.len(),
+                times.0,
+                times.1
+            ));
         }
     }
 
@@ -56,7 +73,8 @@ async fn server_list(ctx: &Context, msg: &Message) -> CommandResult {
                 e
             });
             m
-        }).await?;
+        })
+        .await?;
 
     Ok(())
 }
@@ -64,7 +82,9 @@ async fn server_list(ctx: &Context, msg: &Message) -> CommandResult {
 async fn single_server(ctx: &Context, msg: &Message, servernum: i32) -> CommandResult {
     let servers = get_servers().await?;
 
-    let server = servers.into_iter().find(|s| s.name.trim() == format!("WC{}", servernum).trim());
+    let server = servers
+        .into_iter()
+        .find(|s| s.name.trim() == format!("WC{}", servernum).trim());
 
     if let Some(server) = server {
         let mut plist = String::new();
@@ -86,7 +106,13 @@ async fn single_server(ctx: &Context, msg: &Message, servernum: i32) -> CommandR
             m
         }).await?;
     } else {
-        create_error_msg(ctx, msg, "Server not found", "The given server is either not online or it is newer than 5 minutes").await;
+        create_error_msg(
+            ctx,
+            msg,
+            "Server not found",
+            "The given server is either not online or it is newer than 5 minutes",
+        )
+        .await;
     }
 
     Ok(())

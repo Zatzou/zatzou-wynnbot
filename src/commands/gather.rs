@@ -3,19 +3,26 @@ use std::{borrow::Cow, error::Error, sync::atomic::Ordering};
 use image::{DynamicImage, ImageBuffer, Rgba};
 use imageproc::{drawing, rect::Rect};
 use once_cell::sync::OnceCell;
-use serenity::{client::Context, framework::standard::{CommandResult, macros::command}, http::AttachmentType, model::channel::Message};
+use serenity::{
+    client::Context,
+    framework::standard::{macros::command, CommandResult},
+    http::AttachmentType,
+    model::channel::Message,
+};
 
 use image::io::Reader as ImageReader;
 
-use crate::{BOT_NAME, BOT_VERSION, WEBP_QUALITY, error::create_error_msg, helpers::parse_command_args_raw};
 use crate::wynn::Gather::{self, GatherSpot};
-
+use crate::{
+    error::create_error_msg, helpers::parse_command_args_raw, BOT_NAME, BOT_VERSION, WEBP_QUALITY,
+};
 
 /// Static for the gray image file so we don't have to load it every time
 static MAPBASE_GRAY: OnceCell<image::ImageBuffer<Rgba<u8>, Vec<u8>>> = OnceCell::new();
 
 /// Helper function for getting the base map
-fn get_mapbase_gray() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn Error + Send + Sync>> {
+fn get_mapbase_gray() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn Error + Send + Sync>>
+{
     let out = if let Some(pm) = MAPBASE_GRAY.get() {
         pm.clone()
     } else {
@@ -66,25 +73,25 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
     for spot in spots.woodCutting {
         if spot.r#type.contains(&wanted) {
             count += 1;
-            add_rect(spot, Rgba([0,255,0,255]), &mut out);
+            add_rect(spot, Rgba([0, 255, 0, 255]), &mut out);
         }
     }
     for spot in spots.mining {
         if spot.r#type.contains(&wanted) {
             count += 1;
-            add_rect(spot, Rgba([255,0,0,255]), &mut out);
+            add_rect(spot, Rgba([255, 0, 0, 255]), &mut out);
         }
     }
     for spot in spots.farming {
         if spot.r#type.contains(&wanted) {
             count += 1;
-            add_rect(spot, Rgba([255,255,0,255]), &mut out);
+            add_rect(spot, Rgba([255, 255, 0, 255]), &mut out);
         }
     }
     for spot in spots.fishing {
         if spot.r#type.contains(&wanted) {
             count += 1;
-            add_rect(spot, Rgba([0,0,255,255]), &mut out);
+            add_rect(spot, Rgba([0, 0, 255, 255]), &mut out);
         }
     }
 
@@ -104,16 +111,15 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         return Ok(());
     }
 
-
     // encode image as webp
     let img_data: Vec<u8>;
-    
+
     {
         let img = &DynamicImage::ImageRgba8(out.0);
 
         let encoder = webp::Encoder::from_image(img)?;
         let encoded = encoder.encode(WEBP_QUALITY.load(Ordering::Relaxed) as f32);
-        
+
         img_data = (*encoded).to_vec();
     }
 
@@ -154,7 +160,11 @@ fn calc_z(z: f64) -> f64 {
     (z / 3.0) + 41.0 + 2162.0
 }
 
-fn add_rect(spot: GatherSpot, color: Rgba<u8>, img: &mut drawing::Blend<ImageBuffer<Rgba<u8>, Vec<u8>>>) {
+fn add_rect(
+    spot: GatherSpot,
+    color: Rgba<u8>,
+    img: &mut drawing::Blend<ImageBuffer<Rgba<u8>, Vec<u8>>>,
+) {
     let x = calc_x(spot.location.x) as i32;
     let y = calc_z(spot.location.z) as i32;
 
@@ -165,7 +175,13 @@ fn add_rect(spot: GatherSpot, color: Rgba<u8>, img: &mut drawing::Blend<ImageBuf
 }
 
 async fn gather_usage(ctx: &Context, msg: &Message) -> CommandResult {
-    create_error_msg(ctx, msg, "Invalid command arguments", "correct usage: .gather (material)\nYou can also use a partial material name").await;
+    create_error_msg(
+        ctx,
+        msg,
+        "Invalid command arguments",
+        "correct usage: .gather (material)\nYou can also use a partial material name",
+    )
+    .await;
 
     Ok(())
 }

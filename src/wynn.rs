@@ -1,4 +1,9 @@
-#![allow(non_snake_case, non_camel_case_types, dead_code, clippy::upper_case_acronyms)]
+#![allow(
+    non_snake_case,
+    non_camel_case_types,
+    dead_code,
+    clippy::upper_case_acronyms
+)]
 //! Module for wynncraft type definitions
 
 /// Module containing constants for wynncraft colors
@@ -457,9 +462,9 @@ pub mod Gather {
 pub mod Servers {
     use std::collections::HashMap;
 
-    use tracing::info;
-    use serde::Deserialize;
     use cached::proc_macro::cached;
+    use serde::Deserialize;
+    use tracing::info;
 
     /// Function for getting the current servers with their uptimes from the wynntils api
     #[cached(time = 300, result = true)]
@@ -496,6 +501,6 @@ pub mod Servers {
     pub struct ParsedServer {
         pub name: String,
         pub started: i64,
-        pub players: Vec<String>
+        pub players: Vec<String>,
     }
 }

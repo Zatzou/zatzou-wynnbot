@@ -3,9 +3,12 @@ mod error;
 mod helpers;
 mod wynn;
 
-use std::{collections::HashSet, sync::{Arc, atomic::AtomicU8}};
+use std::{
+    collections::HashSet,
+    sync::{atomic::AtomicU8, Arc},
+};
 
-use commands::{id::*, map::*, gather::*, owner::*, ping::*, up::*};
+use commands::{gather::*, id::*, map::*, owner::*, ping::*, up::*};
 use serenity::{
     async_trait,
     client::bridge::gateway::ShardManager,
@@ -14,7 +17,7 @@ use serenity::{
     model::{event::ResumedEvent, gateway::Ready},
     prelude::*,
 };
-use tracing::{Level, error, info, warn};
+use tracing::{error, info, warn, Level};
 
 pub const BOT_NAME: &str = "Zatzoubot";
 pub const BOT_VERSION: &str = "0.1.0";

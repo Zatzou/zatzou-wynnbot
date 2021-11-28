@@ -68,7 +68,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
             m
         })
         .await?;
-    
+
     // load territory data from wynntils api
     let terrs = get_map().await?;
 
@@ -102,23 +102,13 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
         // guild color calculations
         let col = if !terr.guildColor.is_empty() {
             let col = hex::decode(terr.guildColor[1..].to_owned())?;
-            (col[0],col[1],col[2])
+            (col[0], col[1], col[2])
         } else {
             guild_color(terr.guild.clone())
         };
 
-        let fillcol = Rgba([
-            col.0,
-            col.1,
-            col.2,
-            127,
-        ]);
-        let edgecol = Rgba([
-            col.0,
-            col.1,
-            col.2,
-            255,
-        ]);
+        let fillcol = Rgba([col.0, col.1, col.2, 127]);
+        let edgecol = Rgba([col.0, col.1, col.2, 255]);
 
         let area = Rect::at(x, y).of_size(width, height);
 
@@ -126,12 +116,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
         drawing::draw_hollow_rect_mut(&mut out, area, edgecol);
 
         // maybe find a nice way to get a good color for this
-        let textcol = Rgba([
-            255,
-            255,
-            255,
-            255,
-        ]);
+        let textcol = Rgba([255, 255, 255, 255]);
 
         drawing::draw_text_mut(
             &mut out,
@@ -146,13 +131,13 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
 
     // encode image as webp of quality 80
     let img_data: Vec<u8>;
-    
+
     {
         let img = &DynamicImage::ImageRgba8(out.0);
 
         let encoder = webp::Encoder::from_image(img)?;
         let encoded = encoder.encode(WEBP_QUALITY.load(Ordering::Relaxed) as f32);
-        
+
         img_data = (*encoded).to_vec();
     }
 
@@ -160,8 +145,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
     let cow = Cow::from(img_data);
 
     // construct reply message
-    msg
-        .channel_id
+    msg.channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
                 e.image("attachment://map.webp");
@@ -181,7 +165,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
         .await?;
 
     processingmsg.delete(&ctx.http).await?;
-    
+
     Ok(())
 }
 
@@ -192,10 +176,10 @@ fn guild_color(name: String) -> (u8, u8, u8) {
     let mut hasher = Hasher::new();
     hasher.update(name.as_bytes());
     let hash = hasher.finalize();
-    
+
     let bytes: Vec<u8> = hash.to_ne_bytes().into_iter().rev().collect();
-    
-    (bytes[1],bytes[2],bytes[3])
+
+    (bytes[1], bytes[2], bytes[3])
 }
 
 fn calc_x(x: f64) -> f64 {
