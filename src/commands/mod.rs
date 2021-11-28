@@ -4,3 +4,4 @@ pub mod map;
 pub mod owner;
 pub mod ping;
 pub mod up;
+pub mod help;

@@ -8,7 +8,7 @@ use std::{
     sync::{atomic::AtomicU8, Arc},
 };
 
-use commands::{gather::*, id::*, map::*, owner::*, ping::*, up::*};
+use commands::{gather::*, id::*, map::*, owner::*, ping::*, up::*, help::*};
 use serenity::{
     async_trait,
     client::bridge::gateway::ShardManager,
@@ -45,7 +45,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(ping, quit, map, id, maxid, gather, up)]
+#[commands(ping, quit, map, id, maxid, gather, up, help)]
 struct General;
 
 #[tokio::main]
