@@ -5,7 +5,7 @@ mod wynn;
 
 use std::{collections::HashSet, sync::{Arc, atomic::AtomicU8}};
 
-use commands::{id::*, map::*, owner::*, ping::*, up::*};
+use commands::{id::*, map::*, gather::*, owner::*, ping::*, up::*};
 use serenity::{
     async_trait,
     client::bridge::gateway::ShardManager,
