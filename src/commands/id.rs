@@ -69,7 +69,7 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     let itemlist = if let Some(db) = ITEMDB.get() {
         db
     } else {
-        let itemlist: ItemList = serde_json::from_slice(&fs::read("./item_list.json").await?)?;
+        let itemlist: ItemList = serde_json::from_slice(&fs::read("./resources/item_list.json").await?)?;
         ITEMDB.set(itemlist).unwrap();
         ITEMDB.get().unwrap()
     };

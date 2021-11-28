@@ -33,7 +33,7 @@ fn get_mapbase() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn Error 
         pm.clone()
     } else {
         let map: image::ImageBuffer<Rgba<u8>, Vec<u8>> = if let DynamicImage::ImageRgba8(img) =
-            ImageReader::open("./main-map.png")?.decode()?
+            ImageReader::open("./resources/main-map.png")?.decode()?
         {
             img
         } else {
@@ -54,7 +54,7 @@ fn get_mapbase_gray() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn E
         pm.clone()
     } else {
         let map: image::ImageBuffer<Rgba<u8>, Vec<u8>> = if let DynamicImage::ImageRgba8(img) =
-            ImageReader::open("./main-map-gray.png")?.decode()?
+            ImageReader::open("./resources/main-map-gray.png")?.decode()?
         {
             img
         } else {
@@ -100,7 +100,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
     let mut out = drawing::Blend(get_mapbase()?);
 
     // name rendering stuff
-    let font_data: &[u8] = include_bytes!("../../Roboto-Bold.ttf");
+    let font_data: &[u8] = include_bytes!("../../resources/Roboto-Bold.ttf");
     let font: Font<'static> = Font::try_from_bytes(font_data).unwrap();
 
     // go thru all territories and render the rects for them

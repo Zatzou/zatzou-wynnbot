@@ -1,0 +1,253 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="1364"
+   height="2162"
+   viewBox="0 0 360.89168 572.02918"
+   version="1.1"
+   id="svg5"
+   sodipodi:docname="gathetemplate.svg"
+   inkscape:version="1.1.1 (3bf5ae0d25, 2021-09-20)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <sodipodi:namedview
+     id="namedview7"
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1.0"
+     inkscape:pageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:document-units="px"
+     showgrid="false"
+     units="px"
+     height="2162px"
+     inkscape:zoom="0.2721151"
+     inkscape:cx="167.20866"
+     inkscape:cy="1012.4392"
+     inkscape:window-width="1920"
+     inkscape:window-height="1017"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" />
+  <defs
+     id="defs2">
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect2804"
+       is_visible="true"
+       lpeversion="1"
+       satellites_param="F,0,0,1,0,8,0,1 @ F,0,0,1,0,8,0,1 @ F,0,0,1,0,8,0,1 @ F,0,0,1,0,8,0,1"
+       unit="px"
+       method="auto"
+       mode="F"
+       radius="8"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect2802"
+       is_visible="true"
+       lpeversion="1"
+       satellites_param="F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1"
+       unit="px"
+       method="auto"
+       mode="F"
+       radius="2"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect2800"
+       is_visible="true"
+       lpeversion="1"
+       satellites_param="F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1"
+       unit="px"
+       method="auto"
+       mode="F"
+       radius="2"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect2798"
+       is_visible="true"
+       lpeversion="1"
+       satellites_param="F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1"
+       unit="px"
+       method="auto"
+       mode="F"
+       radius="2"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+    <inkscape:path-effect
+       effect="fillet_chamfer"
+       id="path-effect2796"
+       is_visible="true"
+       lpeversion="1"
+       satellites_param="F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1 @ F,0,0,1,0,2,0,1"
+       unit="px"
+       method="auto"
+       mode="F"
+       radius="2"
+       chamfer_steps="1"
+       flexible="false"
+       use_knot_distance="true"
+       apply_no_radius="true"
+       apply_with_radius="true"
+       only_selected="false"
+       hide_knots="false" />
+  </defs>
+  <g
+     inkscape:label="Taso 1"
+     inkscape:groupmode="layer"
+     id="layer1">
+    <path
+       style="fill:#36393f;fill-opacity:1;stroke:none;stroke-width:1.00872;stroke-linejoin:round"
+       id="rect963"
+       width="100"
+       height="100"
+       x="10"
+       y="462.02902"
+       inkscape:path-effect="#path-effect2804"
+       d="m 18,462.02902 h 84 a 8,8 45 0 1 8,8 v 84 a 8,8 135 0 1 -8,8 H 18 a 8,8 45 0 1 -8,-8 l 0,-84 a 8,8 135 0 1 8,-8 z"
+       sodipodi:type="rect" />
+    <text
+       xml:space="preserve"
+       style="font-size:6.35px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+       x="41.408657"
+       y="473.16528"
+       id="text4421"><tspan
+         sodipodi:role="line"
+         id="tspan4419"
+         style="stroke-width:0.264583"
+         x="41.408657"
+         y="473.16528" /></text>
+    <g
+       id="g2842"
+       transform="translate(-1.3108706,1.335144e-5)">
+      <g
+         id="g2824">
+        <text
+           xml:space="preserve"
+           style="font-size:6.35px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+           x="36.245155"
+           y="479.09204"
+           id="text5987"><tspan
+             sodipodi:role="line"
+             id="tspan5985"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.7px;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+             x="36.245155"
+             y="479.09204">Woodcutting</tspan></text>
+        <path
+           style="fill:#00ff00;fill-opacity:1;stroke:none;stroke-width:0.964999;stroke-linejoin:round;stroke-opacity:1"
+           id="rect14196"
+           width="17.848558"
+           height="18.027042"
+           x="15.354568"
+           y="466.63687"
+           inkscape:path-effect="#path-effect2796"
+           d="m 17.354568,466.63687 h 13.848558 a 2,2 45 0 1 2,2 v 14.02704 a 2,2 135 0 1 -2,2 H 17.354568 a 2,2 45 0 1 -2,-2 v -14.02704 a 2,2 135 0 1 2,-2 z"
+           sodipodi:type="rect" />
+      </g>
+      <g
+         id="g2819">
+        <text
+           xml:space="preserve"
+           style="font-size:6.35px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+           x="35.575428"
+           y="503.15842"
+           id="text5987-6"><tspan
+             sodipodi:role="line"
+             id="tspan5985-9"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.7px;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+             x="35.575428"
+             y="503.15842">Mining</tspan></text>
+        <path
+           style="fill:#ff0000;fill-opacity:1;stroke:none;stroke-width:0.964999;stroke-linejoin:round;stroke-opacity:1"
+           id="rect14196-8"
+           width="17.848558"
+           height="18.027042"
+           x="15.354568"
+           y="490.88928"
+           inkscape:path-effect="#path-effect2798"
+           d="m 17.354568,490.88928 h 13.848558 a 2,2 45 0 1 2,2 v 14.02704 a 2,2 135 0 1 -2,2 H 17.354568 a 2,2 45 0 1 -2,-2 v -14.02704 a 2,2 135 0 1 2,-2 z"
+           sodipodi:type="rect" />
+      </g>
+      <g
+         id="g2814">
+        <text
+           xml:space="preserve"
+           style="font-size:6.35px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+           x="35.575428"
+           y="527.41083"
+           id="text5987-6-6"><tspan
+             sodipodi:role="line"
+             id="tspan5985-9-0"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.7px;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+             x="35.575428"
+             y="527.41083">Farming</tspan></text>
+        <path
+           style="fill:#ffff00;fill-opacity:1;stroke:none;stroke-width:0.964999;stroke-linejoin:round;stroke-opacity:1"
+           id="rect14196-8-5"
+           width="17.848558"
+           height="18.027042"
+           x="15.354568"
+           y="515.14166"
+           inkscape:path-effect="#path-effect2800"
+           d="m 17.354568,515.14166 h 13.848558 a 2,2 45 0 1 2,2 v 14.02704 a 2,2 135 0 1 -2,2 H 17.354568 a 2,2 45 0 1 -2,-2 v -14.02704 a 2,2 135 0 1 2,-2 z"
+           sodipodi:type="rect" />
+      </g>
+      <g
+         id="g2809">
+        <text
+           xml:space="preserve"
+           style="font-size:6.35px;line-height:1.25;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:none;letter-spacing:0px;word-spacing:0px;stroke-width:0.264583"
+           x="35.575428"
+           y="551.8493"
+           id="text5987-6-6-3"><tspan
+             sodipodi:role="line"
+             id="tspan5985-9-0-7"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:12.7px;font-family:Roboto;-inkscape-font-specification:'Roboto, Normal';font-variant-ligatures:none;font-variant-caps:normal;font-variant-numeric:normal;font-variant-east-asian:normal;fill:#ffffff;fill-opacity:1;stroke:none;stroke-width:0.264583;stroke-opacity:1"
+             x="35.575428"
+             y="551.8493">Fishing</tspan></text>
+        <path
+           style="fill:#0000ff;fill-opacity:1;stroke:none;stroke-width:0.964999;stroke-linejoin:round;stroke-opacity:1"
+           id="rect14196-8-5-0"
+           width="17.848558"
+           height="18.027042"
+           x="15.354568"
+           y="539.3941"
+           ry="0"
+           rx="0"
+           inkscape:path-effect="#path-effect2802"
+           d="m 17.354568,539.3941 h 13.848558 a 2,2 45 0 1 2,2 v 14.02705 a 2,2 135 0 1 -2,2 H 17.354568 a 2,2 45 0 1 -2,-2 V 541.3941 a 2,2 135 0 1 2,-2 z"
+           sodipodi:type="rect" />
+      </g>
+    </g>
+  </g>
+</svg>
