@@ -71,25 +71,25 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
     let mut count = 0;
 
     for spot in spots.woodCutting {
-        if spot.r#type.contains(&wanted) {
+        if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
             add_rect(spot, Rgba([0, 255, 0, 255]), &mut out);
         }
     }
     for spot in spots.mining {
-        if spot.r#type.contains(&wanted) {
+        if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
             add_rect(spot, Rgba([255, 0, 0, 255]), &mut out);
         }
     }
     for spot in spots.farming {
-        if spot.r#type.contains(&wanted) {
+        if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
             add_rect(spot, Rgba([255, 255, 0, 255]), &mut out);
         }
     }
     for spot in spots.fishing {
-        if spot.r#type.contains(&wanted) {
+        if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
             add_rect(spot, Rgba([0, 0, 255, 255]), &mut out);
         }
