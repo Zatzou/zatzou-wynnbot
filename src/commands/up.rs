@@ -142,7 +142,7 @@ async fn sp(ctx: &Context, msg: &Message) -> CommandResult {
     }
 
     servers.sort_unstable_by_key(|s| s.started);
-    
+
     let mut desc = String::new();
 
     desc.push_str("Server | Players | Sp regen\n```css\n");

@@ -1,8 +1,10 @@
-use serenity::{client::Context, framework::standard::{CommandResult, macros::command}, model::channel::Message};
+use serenity::{
+    client::Context,
+    framework::standard::{macros::command, CommandResult},
+    model::channel::Message,
+};
 
 use crate::helpers::parse_command_args_raw;
-
-
 
 #[command]
 async fn help(ctx: &Context, msg: &Message) -> CommandResult {
@@ -37,11 +39,11 @@ async fn help(ctx: &Context, msg: &Message) -> CommandResult {
             m
         }).await?;
     }
-    
+
     Ok(())
 }
 
-async fn send_help_msg(title: &str, body: &str, ctx: &Context, msg: &Message ) -> CommandResult {
+async fn send_help_msg(title: &str, body: &str, ctx: &Context, msg: &Message) -> CommandResult {
     msg.channel_id
         .send_message(&ctx.http, |m| {
             m.embed(|e| {
@@ -50,7 +52,8 @@ async fn send_help_msg(title: &str, body: &str, ctx: &Context, msg: &Message ) -
                 e
             });
             m
-        }).await?;
-    
+        })
+        .await?;
+
     Ok(())
 }

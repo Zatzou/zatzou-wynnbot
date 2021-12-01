@@ -395,9 +395,8 @@ fn formatnum(num: i32) -> String {
 }
 
 fn get_percent(value: i32, id: &Id, inverted: &Vec<Identification>) -> f64 {
-    let percent = ((value as f64 - id.min_id() as f64)
-        / (id.max_id() as f64 - id.min_id() as f64))
-        * 100.0;
+    let percent =
+        ((value as f64 - id.min_id() as f64) / (id.max_id() as f64 - id.min_id() as f64)) * 100.0;
 
     return if inverted.contains(&id.id) {
         100.0 - percent
@@ -493,7 +492,6 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
                 value = id.max_id() - id.min_id();
             }
         }
-        
 
         perfids.push(char::from_u32((value * 4 + OFFSET) as u32).unwrap());
     }

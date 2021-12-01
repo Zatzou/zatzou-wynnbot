@@ -8,7 +8,7 @@ use std::{
     sync::{atomic::AtomicU8, Arc},
 };
 
-use commands::{gather::*, id::*, map::*, owner::*, ping::*, up::*, help::*};
+use commands::{gather::*, help::*, id::*, map::*, owner::*, ping::*, up::*};
 use serenity::{
     async_trait,
     client::bridge::gateway::ShardManager,
