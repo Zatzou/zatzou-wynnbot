@@ -380,6 +380,7 @@ pub mod items {
     pub struct IdentificationOrder {
         pub order: BTreeMap<Identification, i32>,
         pub groups: Vec<String>,
+        pub inverted: Vec<Identification>,
     }
 
     /// Groups for ids this should probably not be hardcoded but neither should many other things here

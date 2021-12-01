@@ -257,9 +257,7 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
                 value = encodedval + id.min_id();
             }
 
-            prosentti = ((value as f64 - id.min_id() as f64)
-                / (id.max_id() as f64 - id.min_id() as f64))
-                * 100.0;
+            prosentti = get_percent(value, id, &itemlist.identificationOrder.inverted);
 
             if id.fixed || (-1 <= id.baseval && id.baseval <= 1) {
                 desc.push_str(&format!("{}{} {}\n", formatnum(value), end, id.id.name()));
@@ -397,6 +395,18 @@ fn formatnum(num: i32) -> String {
     }
 }
 
+fn get_percent(value: i32, id: &Id, inverted: &Vec<Identification>) -> f64 {
+    let percent = ((value as f64 - id.min_id() as f64)
+        / (id.max_id() as f64 - id.min_id() as f64))
+        * 100.0;
+
+    return if inverted.contains(&id.id) {
+        100.0 - percent
+    } else {
+        percent
+    };
+}
+
 #[command]
 async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
     // read and parse the input string
@@ -470,11 +480,21 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
         }
 
         let value;
-        if i32::abs(id.baseval) > 100 {
-            value = f64::round((id.max_id() as f64 * 100.0 / id.baseval as f64) - 30.0) as i32;
+        if itemlist.identificationOrder.inverted.contains(&id.id) {
+            if i32::abs(id.baseval) > 100 {
+                // idk if this is correct but idk if there even are items that have above -100 baseval and invert
+                value = f64::round((id.max_id() as f64 * 0.0 / id.baseval as f64) - 30.0) as i32;
+            } else {
+                value = 0;
+            }
         } else {
-            value = id.max_id() - id.min_id();
+            if i32::abs(id.baseval) > 100 {
+                value = f64::round((id.max_id() as f64 * 100.0 / id.baseval as f64) - 30.0) as i32;
+            } else {
+                value = id.max_id() - id.min_id();
+            }
         }
+        
 
         perfids.push(char::from_u32((value * 4 + OFFSET) as u32).unwrap());
     }
