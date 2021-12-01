@@ -9,7 +9,7 @@ use serenity::prelude::*;
 use tokio::fs;
 
 use crate::error::create_error_msg;
-use crate::helpers::{parse_command_args, parse_command_args_raw};
+use crate::helpers::parse_command_args_raw;
 use crate::wynn::items::{Identification, ItemList, Powders, StatusType, IDGROUPS};
 use crate::{BOT_NAME, BOT_VERSION};
 
@@ -261,7 +261,6 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
 
             if id.fixed || (-1 <= id.baseval && id.baseval <= 1) {
                 desc.push_str(&format!("{}{} {}\n", formatnum(value), end, id.id.name()));
-                idprosentit.push(100.0);
             } else {
                 desc.push_str(&format!(
                     "{}{} {} [{:.3}%]\n",
