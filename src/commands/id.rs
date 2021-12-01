@@ -410,7 +410,7 @@ fn get_percent(value: i32, id: &Id, inverted: &Vec<Identification>) -> f64 {
 #[command]
 async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
     // read and parse the input string
-    let mut temp = if let Some(item) = parse_command_args(msg).get(1) {
+    let mut temp = if let Some(item) = parse_command_args_raw(msg) {
         item.trim_start_matches(START_CHAR)
             .trim_end_matches(END_CHAR)
             .split_terminator(SEPARATOR)
