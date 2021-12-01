@@ -131,3 +131,56 @@ fn parse_timestamp(timestamp: i64) -> (i64, i64, i64) {
 
     (hours, minutes, seconds)
 }
+
+#[command]
+async fn sp(ctx: &Context, msg: &Message) -> CommandResult {
+    let mut servers = get_servers().await?;
+    let now = chrono::offset::Utc::now().timestamp();
+
+    for s in servers.iter_mut() {
+        s.started = 1200 - ((now - (s.started + 120) / 1000) % 1200);
+    }
+
+    servers.sort_unstable_by_key(|s| s.started);
+    
+    let mut desc = String::new();
+
+    desc.push_str("Server | Players | Sp regen\n```css\n");
+
+    for server in servers {
+        let minutes = server.started / 60;
+        let seconds = server.started % 60;
+        if minutes == 0 {
+            desc.push_str(&format!(
+                "{:>4} | {:>2} |      {:>2}s\n",
+                server.name,
+                server.players.len(),
+                seconds
+            ));
+        } else {
+            desc.push_str(&format!(
+                "{:>4} | {:>2} | {:>2}m  {:>2}s\n",
+                server.name,
+                server.players.len(),
+                minutes,
+                seconds
+            ));
+        }
+    }
+
+    desc.push_str("```\nNote:\nsp regen times are approximate");
+
+    msg.channel_id
+        .send_message(&ctx.http, |m| {
+            m.add_embed(|e| {
+                e.title("Soulpoint regen times (offset 2m)");
+                e.description(desc);
+                e.timestamp(chrono::Utc::now().to_rfc3339());
+                e
+            });
+            m
+        })
+        .await?;
+
+    Ok(())
+}

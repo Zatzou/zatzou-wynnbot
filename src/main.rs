@@ -45,7 +45,7 @@ impl EventHandler for Handler {
 }
 
 #[group]
-#[commands(ping, quit, map, id, maxid, gather, up, help)]
+#[commands(ping, quit, map, id, maxid, gather, up, sp, help)]
 struct General;
 
 #[tokio::main]
