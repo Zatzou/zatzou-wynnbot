@@ -12,9 +12,9 @@ use commands::{gather::*, help::*, id::*, map::*, owner::*, ping::*, up::*};
 use serenity::{
     async_trait,
     client::bridge::gateway::ShardManager,
-    framework::{standard::macros::group, StandardFramework},
+    framework::{standard::macros::{group, hook}, StandardFramework},
     http::Http,
-    model::{event::ResumedEvent, gateway::Ready},
+    model::{event::ResumedEvent, gateway::Ready, channel::{Message, ReactionType}},
     prelude::*,
 };
 use tracing::{error, info, warn, Level};
@@ -96,6 +96,7 @@ async fn main() {
         .bucket("map", |b| b.delay(5).time_span(60).limit(5))
         .await
         .group(&GENERAL_GROUP)
+        .before(before_hook)
         .after(error::command_error_hook);
 
     let mut client = Client::builder(&token)
@@ -123,4 +124,15 @@ async fn main() {
     if let Err(why) = client.start().await {
         error!("Client error: {:?}", why);
     }
+}
+
+#[hook]
+async fn before_hook(ctx: &Context, msg: &Message, _: &str) -> bool {
+    if msg.author.id == 336039947578376192 {
+        //msg.reply(&ctx.http, "<:coinflop:913770918214529084>").await.unwrap();
+        msg.react(&ctx.http, ReactionType::Custom { animated: false, id: 913770918214529084.into(), name: Some(String::from("coinflop")) }).await.unwrap();
+        return false;
+    }
+    
+    true
 }
