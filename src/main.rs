@@ -128,10 +128,9 @@ async fn main() {
 
 #[hook]
 async fn before_hook(ctx: &Context, msg: &Message, _: &str) -> bool {
+    // coin troll
     if msg.author.id == 336039947578376192 {
-        //msg.reply(&ctx.http, "<:coinflop:913770918214529084>").await.unwrap();
         msg.react(&ctx.http, ReactionType::Custom { animated: false, id: 913770918214529084.into(), name: Some(String::from("coinflop")) }).await.unwrap();
-        return false;
     }
     
     true
