@@ -370,18 +370,18 @@ impl Id {
         if self.fixed || (-1 <= self.baseval && self.baseval <= 1) {
             self.baseval
         } else if self.baseval < 1 {
-            f64::round(self.baseval as f64 * 0.7) as i32
+            f64::floor(self.baseval as f64 * 0.7) as i32
         } else {
-            f64::round(self.baseval as f64 * 1.3) as i32
+            f64::floor(self.baseval as f64 * 1.3) as i32
         }
     }
     fn min_id(&self) -> i32 {
         if self.fixed || (-1 <= self.baseval && self.baseval <= 1) {
             self.baseval
         } else if self.baseval < 1 {
-            f64::round(self.baseval as f64 * 1.3) as i32
+            f64::floor(self.baseval as f64 * 1.3) as i32
         } else {
-            f64::round(self.baseval as f64 * 0.3) as i32
+            f64::floor(self.baseval as f64 * 0.3) as i32
         }
     }
 }
