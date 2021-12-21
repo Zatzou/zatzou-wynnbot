@@ -1,6 +1,5 @@
 use std::borrow::Cow;
 use std::error::Error;
-use std::sync::atomic::Ordering;
 
 use crc32fast::Hasher;
 use image::{DynamicImage, Rgba};
@@ -18,7 +17,8 @@ use image::io::Reader as ImageReader;
 use tracing::info;
 
 use crate::wynn::world::Territories;
-use crate::{BOT_NAME, BOT_VERSION, WEBP_QUALITY};
+use crate::{BOT_NAME, BOT_VERSION};
+use crate::config::CONFIG;
 use cached::proc_macro::cached;
 
 /// Static for the image file so we don't have to load it every time
@@ -136,7 +136,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
         let img = &DynamicImage::ImageRgba8(out.0);
 
         let encoder = webp::Encoder::from_image(img)?;
-        let encoded = encoder.encode(WEBP_QUALITY.load(Ordering::Relaxed) as f32);
+        let encoded = encoder.encode(CONFIG.get().unwrap().image.webp_quality);
 
         img_data = (*encoded).to_vec();
     }

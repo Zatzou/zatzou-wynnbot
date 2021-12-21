@@ -1,6 +1,8 @@
 [bot] # basic bot information
 token = "DISCORD TOKEN HERE"
 app_id = 1234567890
+# prefix for commands
+cmd_prefix = "."
 
 [image] # Image options
 # quality of .webp images uploaded to discord

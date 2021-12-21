@@ -1,4 +1,4 @@
-use std::{borrow::Cow, error::Error, sync::atomic::Ordering};
+use std::{borrow::Cow, error::Error};
 
 use image::{DynamicImage, ImageBuffer, Rgba};
 use imageproc::{drawing, rect::Rect};
@@ -12,10 +12,9 @@ use serenity::{
 
 use image::io::Reader as ImageReader;
 
-use crate::wynn::Gather::{self, GatherSpot};
+use crate::{wynn::Gather::{self, GatherSpot}, config::CONFIG};
 use crate::{
-    error::create_error_msg, helpers::parse_command_args_raw, BOT_NAME, BOT_VERSION, WEBP_QUALITY,
-};
+    error::create_error_msg, helpers::parse_command_args_raw, BOT_NAME, BOT_VERSION};
 
 /// Static for the gray image file so we don't have to load it every time
 static MAPBASE_GRAY: OnceCell<image::ImageBuffer<Rgba<u8>, Vec<u8>>> = OnceCell::new();
@@ -118,7 +117,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         let img = &DynamicImage::ImageRgba8(out.0);
 
         let encoder = webp::Encoder::from_image(img)?;
-        let encoded = encoder.encode(WEBP_QUALITY.load(Ordering::Relaxed) as f32);
+        let encoded = encoder.encode(CONFIG.get().unwrap().image.webp_quality);
 
         img_data = (*encoded).to_vec();
     }

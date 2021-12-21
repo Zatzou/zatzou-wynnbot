@@ -1,11 +1,12 @@
 mod commands;
 mod error;
 mod helpers;
+mod config;
 mod wynn;
 
 use std::{
     collections::HashSet,
-    sync::{atomic::AtomicU8, Arc},
+    sync::Arc,
 };
 
 use commands::{gather::*, help::*, id::*, map::*, owner::*, ping::*, up::*};
@@ -17,13 +18,10 @@ use serenity::{
     model::{event::ResumedEvent, gateway::Ready},
     prelude::*,
 };
-use tracing::{error, info, warn, Level};
+use tracing::{error, info, Level};
 
 pub const BOT_NAME: &str = "Zatzoubot";
 pub const BOT_VERSION: &str = "0.1.0";
-
-/// Quality level used for .webp exports set from config
-pub static WEBP_QUALITY: AtomicU8 = AtomicU8::new(80);
 
 pub struct ShardManagerContainer;
 
@@ -50,12 +48,6 @@ struct General;
 
 #[tokio::main]
 async fn main() {
-    // config
-    let mut config = config::Config::new();
-    config
-        .merge(config::File::with_name("./config.toml"))
-        .expect("Config file 'config.toml' not found in the current directory");
-
     // Initialize the logger to use environment variables.
     //
     // In this case, a good default is setting the environment variable
@@ -64,18 +56,14 @@ async fn main() {
         .with_max_level(Level::INFO)
         .init();
 
-    if let Ok(q) = config.get::<u8>("image.webp_quality") {
-        WEBP_QUALITY.store(q, std::sync::atomic::Ordering::Relaxed);
-    } else {
-        warn!("option image.webp_quality not set in config.toml! Using default of 80 instead for .webp export quality")
-    }
+    // Read the config file
+    config::read_config();
 
-    let token = config
-        .get::<String>("bot.token")
-        .expect("Bot token not found in the config file");
-    let app_id = config
-        .get::<u64>("bot.app_id")
-        .expect("App id not found in the config file");
+    let config = config::CONFIG.get().unwrap();
+
+    let token = config.bot.token.as_ref().expect("No bot token in config");
+    let app_id = config.bot.app_id.expect("No app id in config");
+    let cmd_prefix = config.bot.cmd_prefix.as_ref();
 
     let http = Http::new_with_token(&token);
 
@@ -92,7 +80,7 @@ async fn main() {
 
     // Create the framework
     let framework = StandardFramework::new()
-        .configure(|c| c.owners(owners).prefix("."))
+        .configure(|c| c.owners(owners).prefix(cmd_prefix))
         .bucket("map", |b| b.delay(5).time_span(60).limit(5))
         .await
         .group(&GENERAL_GROUP)
