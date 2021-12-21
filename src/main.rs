@@ -82,7 +82,7 @@ async fn main() {
     // Create the framework
     let framework = StandardFramework::new()
         .configure(|c| c.owners(owners).prefix(cmd_prefix))
-        .bucket("map", |b| b.delay(5).time_span(60).limit(5))
+        .bucket("image", |b| b.delay(5).time_span(60).limit(5))
         .await
         .group(&GENERAL_GROUP)
         .after(error::command_error_hook)

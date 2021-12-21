@@ -43,6 +43,7 @@ fn get_mapbase_gray() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn E
 #[usage("[material]")]
 #[help_available]
 #[only_in(guilds)]
+#[bucket("image")]
 async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
     let cmd_args = parse_command_args_raw(msg);
 
