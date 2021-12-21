@@ -2,11 +2,14 @@ use std::fs;
 
 use once_cell::sync::OnceCell;
 use serde::Deserialize;
-use tracing::info;
+use tracing::{info, error};
 
+/// Root structure for the bot configuration
 #[derive(Deserialize)]
 pub struct Config {
+    /// Core configuration options
     pub bot: BotConfig,
+    /// Config options that deal with images
     pub image: ImageConfig,
 }
 
@@ -14,14 +17,37 @@ pub struct Config {
 #[derive(Deserialize)]
 pub struct BotConfig {
     /// Bot token
-    pub token: Option<String>,
+    token: Option<String>,
     /// Bot app id
-    pub app_id: Option<u64>,
+    app_id: Option<u64>,
+    /// Prefix used for commands
     #[serde(default = "default_cmd_prefix")]
     pub cmd_prefix: String,
 }
 
 fn default_cmd_prefix() -> String { String::from(".") }
+
+impl BotConfig {
+    /// Function for getting the token since it isn't optional and has to be checked
+    pub fn get_token(&self) -> &str {
+        if let Some(t) = &self.token {
+            t
+        } else {
+            error!("No token set in config.toml");
+            panic!();
+        }
+    }
+
+    /// Function for getting the app_id since it isn't optional and has to be checked
+    pub fn get_appid(&self) -> u64 {
+        if let Some(t) = self.app_id {
+            t
+        } else {
+            error!("No app_id set in config.toml");
+            panic!();
+        }
+    }
+}
 
 /// Image encoding settings
 #[derive(Deserialize)]
@@ -33,15 +59,48 @@ pub struct ImageConfig {
 
 fn default_webp_quality() -> f32 { 80.0 }
 
-pub static CONFIG: OnceCell<Config> = OnceCell::new();
+/// Static for holding the config
+static CONFIG: OnceCell<Config> = OnceCell::new();
 
+/// Function for initially loading and parsing the config file
+/// 
+/// This function should only be called once
 pub fn read_config() {
     // read and deserialize the config file
     info!("Reading config from file ./config.toml");
-    let configfile = fs::read("./config.toml").unwrap();
-    let config: Config = toml::from_slice(&configfile).unwrap();
+    
+    // read the config file
+    match fs::read("./config.toml") {
+        Ok(data) => {
+            // parse the config file
+            match toml::from_slice::<Config>(&data) {
+                Ok(config) => {
+                    if let Err(_) = CONFIG.set(config) {
+                        // this is unreachable since `read_config()` should only be called once at startup
+                        error!("Attempted to write config but config is already written");
+                    };
+                },
+                Err(why) => {
+                    error!("failed parsing the config file:");
+                    error!("{}", why);
+                    panic!();
+                }
+            }
+        },
+        Err(why) => {
+            error!("failed reading the config file, does it exist?");
+            error!("{}", why);
+            panic!();
+        },
+    }
+}
 
-    if let Err(_) = CONFIG.set(config) {
-        panic!("Config reading failed");
-    };
+/// Function for getting the config variables easily
+pub fn get_config() -> &'static Config {
+    if let Some(c) = CONFIG.get() {
+        c
+    } else {
+        // this is unreachable unless something tries to read the config before it is initialized
+        unreachable!("Reading config failed but it should not be able to fail");
+    }
 }

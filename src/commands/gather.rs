@@ -12,7 +12,7 @@ use serenity::{
 
 use image::io::Reader as ImageReader;
 
-use crate::{wynn::Gather::{self, GatherSpot}, config::CONFIG};
+use crate::{wynn::Gather::{self, GatherSpot}, config::get_config};
 use crate::{
     error::create_error_msg, helpers::parse_command_args_raw, BOT_NAME, BOT_VERSION};
 
@@ -117,7 +117,7 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
         let img = &DynamicImage::ImageRgba8(out.0);
 
         let encoder = webp::Encoder::from_image(img)?;
-        let encoded = encoder.encode(CONFIG.get().unwrap().image.webp_quality);
+        let encoded = encoder.encode(get_config().image.webp_quality);
 
         img_data = (*encoded).to_vec();
     }

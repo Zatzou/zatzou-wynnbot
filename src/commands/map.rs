@@ -18,7 +18,7 @@ use tracing::info;
 
 use crate::wynn::world::Territories;
 use crate::{BOT_NAME, BOT_VERSION};
-use crate::config::CONFIG;
+use crate::config::get_config;
 use cached::proc_macro::cached;
 
 /// Static for the image file so we don't have to load it every time
@@ -136,7 +136,7 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
         let img = &DynamicImage::ImageRgba8(out.0);
 
         let encoder = webp::Encoder::from_image(img)?;
-        let encoded = encoder.encode(CONFIG.get().unwrap().image.webp_quality);
+        let encoded = encoder.encode(get_config().image.webp_quality);
 
         img_data = (*encoded).to_vec();
     }

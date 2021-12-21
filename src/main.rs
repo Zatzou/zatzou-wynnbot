@@ -59,10 +59,10 @@ async fn main() {
     // Read the config file
     config::read_config();
 
-    let config = config::CONFIG.get().unwrap();
+    let config = config::get_config();
 
-    let token = config.bot.token.as_ref().expect("No bot token in config");
-    let app_id = config.bot.app_id.expect("No app id in config");
+    let token = config.bot.get_token();
+    let app_id = config.bot.get_appid();
     let cmd_prefix = config.bot.cmd_prefix.as_ref();
 
     let http = Http::new_with_token(&token);
