@@ -1,6 +1,7 @@
 mod commands;
 mod error;
 mod helpers;
+mod help;
 mod config;
 mod wynn;
 
@@ -9,7 +10,7 @@ use std::{
     sync::Arc,
 };
 
-use commands::{gather::*, help::*, id::*, map::*, owner::*, ping::*, up::*};
+use commands::{gather::*, id::*, map::*, owner::*, up::*};
 use serenity::{
     async_trait,
     client::bridge::gateway::ShardManager,
@@ -84,7 +85,8 @@ async fn main() {
         .bucket("map", |b| b.delay(5).time_span(60).limit(5))
         .await
         .group(&GENERAL_GROUP)
-        .after(error::command_error_hook);
+        .after(error::command_error_hook)
+        .help(&help::HELP);
 
     let mut client = Client::builder(&token)
         .application_id(app_id)

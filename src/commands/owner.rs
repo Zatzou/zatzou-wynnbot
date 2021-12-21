@@ -6,6 +6,7 @@ use crate::ShardManagerContainer;
 
 #[command]
 #[owners_only]
+#[help_available(false)]
 async fn quit(ctx: &Context, msg: &Message) -> CommandResult {
     let data = ctx.data.read().await;
 

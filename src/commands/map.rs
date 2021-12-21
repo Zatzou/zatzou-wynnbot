@@ -54,6 +54,9 @@ async fn get_map() -> Result<Territories, reqwest::Error> {
 }
 
 #[command]
+#[description("Renders the guild map")]
+#[help_available]
+#[only_in(guilds)]
 async fn map(ctx: &Context, msg: &Message) -> CommandResult {
     let processingmsg = msg
         .channel_id

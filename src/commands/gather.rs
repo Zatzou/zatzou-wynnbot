@@ -39,6 +39,10 @@ fn get_mapbase_gray() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn E
 }
 
 #[command]
+#[description("Finds gather spots and renders them to a map")]
+#[usage("[material]")]
+#[help_available]
+#[only_in(guilds)]
 async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
     let cmd_args = parse_command_args_raw(msg);
 

@@ -27,6 +27,10 @@ const AIR: &str = "<:air:899382632532570123>";
 static ITEMDB: OnceCell<ItemList> = OnceCell::new();
 
 #[command]
+#[description("Command for reading wynntils id strings")]
+#[usage("[id string]")]
+#[help_available]
+#[only_in(guilds)]
 async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     // read and parse the input string
     let mut temp = if let Some(item) = parse_command_args_raw(msg) {
@@ -406,6 +410,10 @@ fn get_percent(value: i32, id: &Id, inverted: &Vec<Identification>) -> f64 {
 }
 
 #[command]
+#[description("Creates perfect id strings for items")]
+#[usage("[item name]")]
+#[help_available]
+#[only_in(guilds)]
 async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
     // read and parse the input string
     let mut temp = if let Some(item) = parse_command_args_raw(msg) {

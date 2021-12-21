@@ -7,6 +7,10 @@ use crate::helpers::parse_command_args;
 use crate::wynn::Servers::*;
 
 #[command]
+#[description("Gets the uptimes of the current servers or more specific info on a single server")]
+#[usage("(server)")]
+#[help_available]
+#[only_in(guilds)]
 async fn up(ctx: &Context, msg: &Message) -> CommandResult {
     let cmd_args = parse_command_args(msg);
 
@@ -133,6 +137,9 @@ fn parse_timestamp(timestamp: i64) -> (i64, i64, i64) {
 }
 
 #[command]
+#[description("Gets the approximate sp regen times for all servers")]
+#[help_available]
+#[only_in(guilds)]
 async fn sp(ctx: &Context, msg: &Message) -> CommandResult {
     let mut servers = get_servers().await?;
     let now = chrono::offset::Utc::now().timestamp();
