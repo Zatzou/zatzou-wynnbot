@@ -12,9 +12,11 @@ use serenity::{
 
 use image::io::Reader as ImageReader;
 
-use crate::{wynn::Gather::{self, GatherSpot}, config::get_config};
 use crate::{
-    error::create_error_msg, helpers::parse_command_args_raw, BOT_NAME, BOT_VERSION};
+    config::get_config,
+    wynn::Gather::{self, GatherSpot},
+};
+use crate::{error::create_error_msg, helpers::parse_command_args_raw, BOT_NAME, BOT_VERSION};
 
 /// Static for the gray image file so we don't have to load it every time
 static MAPBASE_GRAY: OnceCell<image::ImageBuffer<Rgba<u8>, Vec<u8>>> = OnceCell::new();

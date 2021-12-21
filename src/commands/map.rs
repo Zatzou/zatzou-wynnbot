@@ -16,9 +16,9 @@ use image::io::Reader as ImageReader;
 
 use tracing::info;
 
+use crate::config::get_config;
 use crate::wynn::world::Territories;
 use crate::{BOT_NAME, BOT_VERSION};
-use crate::config::get_config;
 use cached::proc_macro::cached;
 
 /// Static for the image file so we don't have to load it every time

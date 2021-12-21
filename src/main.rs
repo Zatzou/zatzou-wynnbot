@@ -1,14 +1,11 @@
 mod commands;
-mod error;
-mod helpers;
-mod help;
 mod config;
+mod error;
+mod help;
+mod helpers;
 mod wynn;
 
-use std::{
-    collections::HashSet,
-    sync::Arc,
-};
+use std::{collections::HashSet, sync::Arc};
 
 use commands::{gather::*, id::*, map::*, owner::*, up::*};
 use serenity::{
