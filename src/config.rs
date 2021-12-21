@@ -9,6 +9,7 @@ use tracing::{info, error};
 pub struct Config {
     /// Core configuration options
     pub bot: BotConfig,
+    #[serde(default)]
     /// Config options that deal with images
     pub image: ImageConfig,
 }
@@ -55,6 +56,14 @@ pub struct ImageConfig {
     /// Quality of webp encoding
     #[serde(default = "default_webp_quality")]
     pub webp_quality: f32,
+}
+
+impl Default for ImageConfig {
+    fn default() -> Self {
+        Self {
+            webp_quality: 80.0
+        }
+    }
 }
 
 fn default_webp_quality() -> f32 { 80.0 }
