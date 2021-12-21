@@ -12,9 +12,9 @@ use commands::{gather::*, help::*, id::*, map::*, owner::*, ping::*, up::*};
 use serenity::{
     async_trait,
     client::bridge::gateway::ShardManager,
-    framework::{standard::macros::{group, hook}, StandardFramework},
+    framework::{standard::macros::group, StandardFramework},
     http::Http,
-    model::{event::ResumedEvent, gateway::Ready, channel::{Message, ReactionType}},
+    model::{event::ResumedEvent, gateway::Ready},
     prelude::*,
 };
 use tracing::{error, info, warn, Level};
@@ -96,7 +96,6 @@ async fn main() {
         .bucket("map", |b| b.delay(5).time_span(60).limit(5))
         .await
         .group(&GENERAL_GROUP)
-        .before(before_hook)
         .after(error::command_error_hook);
 
     let mut client = Client::builder(&token)
@@ -124,14 +123,4 @@ async fn main() {
     if let Err(why) = client.start().await {
         error!("Client error: {:?}", why);
     }
-}
-
-#[hook]
-async fn before_hook(ctx: &Context, msg: &Message, _: &str) -> bool {
-    // coin troll
-    if msg.author.id == 336039947578376192 {
-        msg.react(&ctx.http, ReactionType::Custom { animated: false, id: 913770918214529084.into(), name: Some(String::from("coinflop")) }).await.unwrap();
-    }
-    
-    true
 }
