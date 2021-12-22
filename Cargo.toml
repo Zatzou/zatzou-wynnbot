@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
-serenity = { version = "0.10.9", features = ["cache", "framework", "standard_framework", "rustls_backend", "gateway", "unstable_discord_api"] }
+serenity = { version = "0.10.9", features = ["cache", "framework", "standard_framework", "rustls_backend", "gateway", "unstable_discord_api", "collector"] }
 
 toml = "0.5"
 

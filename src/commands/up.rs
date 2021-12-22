@@ -1,4 +1,7 @@
+use serenity::builder::CreateEmbed;
 use serenity::framework::standard::macros::command;
+use serenity::model::interactions::InteractionResponseType;
+use serenity::model::interactions::message_component::ButtonStyle;
 use serenity::{client::Context, framework::standard::CommandResult, model::channel::Message};
 
 use crate::error::create_error_msg;
@@ -141,6 +144,56 @@ fn parse_timestamp(timestamp: i64) -> (i64, i64, i64) {
 #[help_available]
 #[only_in(guilds)]
 async fn sp(ctx: &Context, msg: &Message) -> CommandResult {
+    let desc = generate_sp_table().await?;
+    
+    let mut message = msg.channel_id
+        .send_message(&ctx.http, |m| {
+            m.add_embed(|e| {
+                e.title("Soulpoint regen times (offset 2m)");
+                e.description(desc);
+                e.timestamp(chrono::Utc::now().to_rfc3339());
+                e
+            });
+            m.components(|c| {
+                c.create_action_row(|ar| {
+                    ar.create_button(|b| {
+                        b.style(ButtonStyle::Primary);
+                        b.label("Update");
+                        b.custom_id("updatebtn");
+                        b.disabled(false);
+                        b
+                    });
+                    ar
+                });
+                c
+            });
+            m
+        })
+        .await?;
+
+    loop {
+        let interaction = message.await_component_interaction(&ctx.shard).timeout(std::time::Duration::from_secs(120)).await;
+    
+        if let Some(interact) = interaction {
+            update_sp_msg(ctx, &mut message, true).await?;
+    
+            interact.create_interaction_response(&ctx, |r| {
+                r.kind(InteractionResponseType::DeferredUpdateMessage);
+                r
+            }).await?;
+        } else {
+            break;
+        }
+    }
+
+    // finally remove the message after time is up
+    // might be nicer to remove the button but laziness
+    message.delete(&ctx.http).await?;
+
+    Ok(())
+}
+
+async fn generate_sp_table() -> Result<String, reqwest::Error> {
     let mut servers = get_servers().await?;
     let now = chrono::offset::Utc::now().timestamp();
 
@@ -154,7 +207,7 @@ async fn sp(ctx: &Context, msg: &Message) -> CommandResult {
 
     desc.push_str("Server | Players | Sp regen\n```css\n");
 
-    for server in servers {
+    for server in servers.iter().take(20) {
         let minutes = server.started / 60;
         let seconds = server.started % 60;
         if minutes == 0 {
@@ -177,17 +230,37 @@ async fn sp(ctx: &Context, msg: &Message) -> CommandResult {
 
     desc.push_str("```\nNote:\nsp regen times are approximate");
 
-    msg.channel_id
-        .send_message(&ctx.http, |m| {
-            m.add_embed(|e| {
-                e.title("Soulpoint regen times (offset 2m)");
-                e.description(desc);
-                e.timestamp(chrono::Utc::now().to_rfc3339());
-                e
-            });
-            m
-        })
-        .await?;
+    Ok(desc)
+}
 
+async fn update_sp_msg(ctx: &Context, msg: &mut Message, updatebtn: bool) -> CommandResult {
+    let desc = generate_sp_table().await?;
+    
+    msg.edit(&ctx, |m| {
+        m.embed(|e| {
+            e.title("Soulpoint regen times (offset 2m)");
+            e.description(desc);
+            e.timestamp(chrono::Utc::now().to_rfc3339());
+            e
+        });
+        // only add the updatebtn when we want it
+        if updatebtn {
+            m.components(|c| {
+                c.create_action_row(|ar| {
+                    ar.create_button(|b| {
+                        b.style(ButtonStyle::Primary);
+                        b.label("Update");
+                        b.custom_id("updatebtn");
+                        b.disabled(false);
+                        b
+                    });
+                    ar
+                });
+                c
+            });
+        }
+        m
+    }).await?;
+    
     Ok(())
 }
