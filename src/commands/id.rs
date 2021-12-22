@@ -449,7 +449,7 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
     let items = &itemlist.items;
 
     // find the item from the database
-    let item = if let Some(item) = items.iter().find(|f| f.displayName == name) {
+    let item = if let Some(item) = items.iter().find(|f| f.displayName.eq_ignore_ascii_case(&name)) {
         item
     } else {
         create_error_msg(
@@ -504,7 +504,7 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
         perfids.push(char::from_u32((value * 4 + OFFSET) as u32).unwrap());
     }
 
-    let output = format!("󵿰{}󵿲{}󵀀󵿱", name, perfids);
+    let output = format!("󵿰{}󵿲{}󵀀󵿱", item.displayName, perfids);
 
     msg.channel_id
         .send_message(&ctx.http, |m| {
