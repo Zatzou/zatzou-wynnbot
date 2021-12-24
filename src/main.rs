@@ -24,7 +24,7 @@ use serenity::{
     },
     prelude::*,
 };
-use tracing::{error, info, Level};
+use tracing::{error, info, log::warn, Level};
 
 pub const BOT_NAME: &str = "Zatzoubot";
 pub const BOT_VERSION: &str = "0.1.0";
@@ -66,7 +66,10 @@ impl EventHandler for Handler {
                                 Ok(())
                             }
                         }
-                        _ => Ok(()),
+                        _ => {
+                            warn!("Button with id `{}` pressed but there is no handler for a button with that id", intr.data.custom_id);
+                            Ok(())
+                        }
                     };
 
                     if let Err(why) = result {

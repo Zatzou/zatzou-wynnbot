@@ -187,7 +187,7 @@ async fn generate_sp_table() -> Result<String, reqwest::Error> {
 
     desc.push_str("Server | Players | Sp regen\n```css\n");
 
-    for server in servers.iter().take(20) {
+    for server in servers.iter().take(25) {
         let minutes = server.started / 60;
         let seconds = server.started % 60;
         if minutes == 0 {
