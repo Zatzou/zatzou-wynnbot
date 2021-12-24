@@ -1,4 +1,4 @@
-use std::{borrow::Cow, error::Error};
+use std::{borrow::Cow, error::Error, collections::HashMap};
 
 use image::{DynamicImage, ImageBuffer, Rgba};
 use imageproc::{drawing, rect::Rect};
@@ -14,7 +14,7 @@ use image::io::Reader as ImageReader;
 
 use crate::{
     config::get_config,
-    wynn::Gather::{self, GatherSpot},
+    wynn::Gather::{self, GatherSpot, GatherSpots},
 };
 use crate::{error::create_error_msg, helpers::parse_command_args_raw, BOT_NAME, BOT_VERSION};
 
@@ -76,25 +76,25 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
 
     let mut count = 0;
 
-    for spot in spots.woodCutting {
+    for spot in &spots.woodCutting {
         if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
             add_rect(spot, Rgba([0, 255, 0, 255]), &mut out);
         }
     }
-    for spot in spots.mining {
+    for spot in &spots.mining {
         if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
             add_rect(spot, Rgba([255, 0, 0, 255]), &mut out);
         }
     }
-    for spot in spots.farming {
+    for spot in &spots.farming {
         if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
             add_rect(spot, Rgba([255, 255, 0, 255]), &mut out);
         }
     }
-    for spot in spots.fishing {
+    for spot in &spots.fishing {
         if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
             add_rect(spot, Rgba([0, 0, 255, 255]), &mut out);
@@ -104,13 +104,22 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
     if count == 0 {
         // delete the processing message
         processingmsg.delete(&ctx.http).await?;
+        
+        let mut alltypes = String::new();
+        let types = get_all_res(&spots);
+        
+        for t in types {
+            alltypes.push_str(&format!("`{}`, ", t.0));
+        }
+        
         create_error_msg(
             ctx,
             msg,
             "No matches",
             &format!(
-                "The current filter `{}` did not match any known resources",
-                wanted
+                "The current filter `{}` did not match any known resources\nCurrent known resource types are:\n{}",
+                wanted,
+                alltypes
             ),
         )
         .await;
@@ -167,7 +176,7 @@ fn calc_z(z: f64) -> f64 {
 }
 
 fn add_rect(
-    spot: GatherSpot,
+    spot: &GatherSpot,
     color: Rgba<u8>,
     img: &mut drawing::Blend<ImageBuffer<Rgba<u8>, Vec<u8>>>,
 ) {
@@ -190,4 +199,31 @@ async fn gather_usage(ctx: &Context, msg: &Message) -> CommandResult {
     .await;
 
     Ok(())
+}
+
+fn get_all_res<'a>(spots: &GatherSpots) -> HashMap<String, i32> {
+    let mut out: HashMap<String, i32> = HashMap::new();
+    
+    for s in &spots.woodCutting {
+        append_spots(&mut out, &s);
+    }
+    for s in &spots.mining {
+        append_spots(&mut out, &s);
+    }
+    for s in &spots.farming {
+        append_spots(&mut out, &s);
+    }
+    for s in &spots.fishing {
+        append_spots(&mut out, &s);
+    }
+
+    out
+}
+
+fn append_spots(map: &mut HashMap<String, i32>, spot: &GatherSpot) {
+    if let Some(v) = map.get_mut(&spot.r#type) {
+        *v += 1;
+    } else {
+        map.insert(spot.r#type.clone(), 0);
+    }
 }
