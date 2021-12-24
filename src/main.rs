@@ -8,12 +8,20 @@ mod wynn;
 use std::{collections::HashSet, sync::Arc};
 
 use commands::{gather::*, id::*, map::*, owner::*, up::*};
+use error::create_error_msg;
 use serenity::{
     async_trait,
     client::bridge::gateway::ShardManager,
     framework::{standard::macros::group, StandardFramework},
     http::Http,
-    model::{event::ResumedEvent, gateway::Ready},
+    model::{
+        event::ResumedEvent,
+        gateway::Ready,
+        interactions::{
+            message_component::{ComponentType, InteractionMessage},
+            Interaction,
+        },
+    },
     prelude::*,
 };
 use tracing::{error, info, Level};
@@ -37,6 +45,45 @@ impl EventHandler for Handler {
 
     async fn resume(&self, _: Context, _: ResumedEvent) {
         info!("Resumed");
+    }
+
+    // handle interactions nicely
+    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
+        match interaction {
+            Interaction::MessageComponent(intr) => {
+                if intr.data.component_type == ComponentType::Button {
+                    let msg = if let InteractionMessage::Regular(msg) = &intr.message {
+                        Some(msg)
+                    } else {
+                        None
+                    };
+
+                    let result = match intr.data.custom_id.as_ref() {
+                        "update_sp" => {
+                            if let Some(msg) = msg {
+                                crate::commands::up::sp_interact_handler(&ctx, &msg, &intr).await
+                            } else {
+                                Ok(())
+                            }
+                        }
+                        _ => Ok(()),
+                    };
+
+                    if let Err(why) = result {
+                        if let Some(msg) = msg {
+                            create_error_msg(
+                                &ctx,
+                                msg,
+                                "Interaction failed",
+                                format!("{}", why).as_ref(),
+                            )
+                            .await;
+                        }
+                    }
+                }
+            }
+            _ => {}
+        }
     }
 }
 

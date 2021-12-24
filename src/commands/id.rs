@@ -449,7 +449,10 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
     let items = &itemlist.items;
 
     // find the item from the database
-    let item = if let Some(item) = items.iter().find(|f| f.displayName.eq_ignore_ascii_case(&name)) {
+    let item = if let Some(item) = items
+        .iter()
+        .find(|f| f.displayName.eq_ignore_ascii_case(&name))
+    {
         item
     } else {
         create_error_msg(
