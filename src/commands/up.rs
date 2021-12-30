@@ -1,44 +1,31 @@
-use serenity::framework::standard::macros::command;
-use serenity::model::interactions::message_component::{ButtonStyle, MessageComponentInteraction};
-use serenity::model::interactions::InteractionResponseType;
-use serenity::{client::Context, framework::standard::CommandResult, model::channel::Message};
+use poise::serenity::model::interactions::message_component::{
+    ButtonStyle, MessageComponentInteraction,
+};
+use poise::serenity::model::interactions::InteractionResponseType;
+use poise::serenity_prelude::Message;
+
+use crate::{Context, Error};
 
 use crate::error::create_error_msg;
-use crate::helpers::parse_command_args;
 
 use crate::wynn::Servers::*;
 
-#[command]
-#[description("Gets the uptimes of the current servers or more specific info on a single server")]
-#[usage("(server)")]
-#[help_available]
-#[only_in(guilds)]
-async fn up(ctx: &Context, msg: &Message) -> CommandResult {
-    let cmd_args = parse_command_args(msg);
-
-    if cmd_args.len() == 1 {
-        server_list(ctx, msg).await?;
+/// Check uptimes of servers
+#[poise::command(prefix_command, slash_command)]
+pub async fn up(
+    ctx: Context<'_>,
+    #[description = "Server number"] n: Option<i32>,
+) -> Result<(), Error> {
+    if let Some(n) = n {
+        single_server(ctx, n).await?;
     } else {
-        let server: i32 = if let Ok(n) = cmd_args.get(1).unwrap().parse() {
-            n
-        } else {
-            create_error_msg(
-                ctx,
-                msg,
-                "Invalid server id",
-                &format!("`{}` is not a valid number", cmd_args.get(1).unwrap()),
-            )
-            .await;
-            return Ok(());
-        };
-
-        single_server(ctx, msg, server).await?;
+        server_list(ctx).await?;
     }
 
     Ok(())
 }
 
-async fn server_list(ctx: &Context, msg: &Message) -> CommandResult {
+async fn server_list(ctx: Context<'_>) -> Result<(), Error> {
     let mut servers = get_servers().await?;
     // sort servers by uptime
     servers.sort_unstable_by_key(|s| s.started);
@@ -70,22 +57,21 @@ async fn server_list(ctx: &Context, msg: &Message) -> CommandResult {
 
     desc.push_str("```");
 
-    msg.channel_id
-        .send_message(&ctx.http, |m| {
-            m.add_embed(|e| {
-                e.title("Server | Players | Uptime");
-                e.description(desc);
-                e.timestamp(chrono::Utc::now().to_rfc3339());
-                e
-            });
-            m
-        })
-        .await?;
+    ctx.send(|m| {
+        m.embed(|e| {
+            e.title("Server | Players | Uptime");
+            e.description(desc);
+            e.timestamp(chrono::Utc::now().to_rfc3339());
+            e
+        });
+        m
+    })
+    .await?;
 
     Ok(())
 }
 
-async fn single_server(ctx: &Context, msg: &Message, servernum: i32) -> CommandResult {
+async fn single_server(ctx: Context<'_>, servernum: i32) -> Result<(), Error> {
     let servers = get_servers().await?;
 
     let server = servers
@@ -101,9 +87,9 @@ async fn single_server(ctx: &Context, msg: &Message, servernum: i32) -> CommandR
 
         let times = parse_timestamp(server.started);
 
-        msg.channel_id
-        .send_message(&ctx.http, |m| {
-            m.add_embed(|e| {
+        ctx
+        .send(|m| {
+            m.embed(|e| {
                 e.title(&format!("WC{}", servernum));
                 e.description(&format!("The server WC{} started <t:{}:T>\nIt has been running for `{}h {:>2}m {:>2}s`\n\nPlayer list\n```\n{}```", servernum, server.started / 1000, times.0, times.1, times.2, plist));
                 e.timestamp(chrono::Utc::now().to_rfc3339());
@@ -114,7 +100,6 @@ async fn single_server(ctx: &Context, msg: &Message, servernum: i32) -> CommandR
     } else {
         create_error_msg(
             ctx,
-            msg,
             "Server not found",
             "The given server is either not online or it is newer than 5 minutes",
         )
@@ -138,37 +123,34 @@ fn parse_timestamp(timestamp: i64) -> (i64, i64, i64) {
     (hours, minutes, seconds)
 }
 
-#[command]
-#[description("Gets the approximate sp regen times for all servers")]
-#[help_available]
-#[only_in(guilds)]
-async fn sp(ctx: &Context, msg: &Message) -> CommandResult {
+/// Get sp regen times
+#[poise::command(prefix_command, slash_command)]
+pub async fn sp(ctx: Context<'_>) -> Result<(), Error> {
     let desc = generate_sp_table().await?;
 
-    msg.channel_id
-        .send_message(&ctx.http, |m| {
-            m.add_embed(|e| {
-                e.title("Soulpoint regen times (offset 2m)");
-                e.description(desc);
-                e.timestamp(chrono::Utc::now().to_rfc3339());
-                e
-            });
-            m.components(|c| {
-                c.create_action_row(|ar| {
-                    ar.create_button(|b| {
-                        b.style(ButtonStyle::Primary);
-                        b.label("Update");
-                        b.custom_id("update_sp");
-                        b.disabled(false);
-                        b
-                    });
-                    ar
+    ctx.send(|m| {
+        m.embed(|e| {
+            e.title("Soulpoint regen times (offset 2m)");
+            e.description(desc);
+            e.timestamp(chrono::Utc::now().to_rfc3339());
+            e
+        });
+        m.components(|c| {
+            c.create_action_row(|ar| {
+                ar.create_button(|b| {
+                    b.style(ButtonStyle::Primary);
+                    b.label("Update");
+                    b.custom_id("update_sp");
+                    b.disabled(false);
+                    b
                 });
-                c
+                ar
             });
-            m
-        })
-        .await?;
+            c
+        });
+        m
+    })
+    .await?;
 
     Ok(())
 }
@@ -213,10 +195,14 @@ async fn generate_sp_table() -> Result<String, reqwest::Error> {
     Ok(desc)
 }
 
-async fn update_sp_msg(ctx: &Context, msg: &mut Message, updatebtn: bool) -> CommandResult {
+async fn update_sp_msg(
+    ctx: &poise::serenity_prelude::Context,
+    msg: &mut Message,
+    updatebtn: bool,
+) -> Result<(), Error> {
     let desc = generate_sp_table().await?;
 
-    msg.edit(&ctx, |m| {
+    msg.edit(&ctx.http, |m| {
         m.embed(|e| {
             e.title("Soulpoint regen times (offset 2m)");
             e.description(desc);
@@ -247,10 +233,10 @@ async fn update_sp_msg(ctx: &Context, msg: &mut Message, updatebtn: bool) -> Com
 }
 
 pub async fn sp_interact_handler(
-    ctx: &Context,
+    ctx: &poise::serenity_prelude::Context,
     msg: &Message,
     interact: &MessageComponentInteraction,
-) -> CommandResult {
+) -> Result<(), Error> {
     let mut message = msg.clone();
 
     update_sp_msg(ctx, &mut message, true).await?;

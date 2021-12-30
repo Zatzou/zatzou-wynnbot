@@ -8,7 +8,7 @@
 
 /// Module containing constants for wynncraft colors
 pub mod color {
-    use serenity::utils::Color;
+    use poise::serenity::utils::Color;
 
     pub const DEPRESSING_ITEM: Color = Color::from_rgb(170, 170, 170);
     pub const NORMAL_ITEM: Color = Color::from_rgb(255, 255, 255);
@@ -60,8 +60,8 @@ pub mod world {
 pub mod items {
     use std::{collections::BTreeMap, ops::RangeInclusive};
 
+    use poise::serenity::utils::Color;
     use serde::Deserialize;
-    use serenity::utils::Color;
 
     use crate::wynn::color;
 

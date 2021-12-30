@@ -1,6 +1,5 @@
 [bot] # basic bot information
 token = "DISCORD TOKEN HERE"
-app_id = 1234567890
 # prefix for commands
 cmd_prefix = "."
 

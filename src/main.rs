@@ -2,104 +2,72 @@ mod commands;
 mod config;
 mod error;
 mod help;
-mod helpers;
 mod wynn;
 
-use std::{collections::HashSet, sync::Arc};
+use commands::{gather, id, map, up};
+use poise::serenity_prelude::{self as serenity, ComponentType, Interaction};
 
-use commands::{gather::*, id::*, map::*, owner::*, up::*};
-use error::create_error_msg;
-use serenity::{
-    async_trait,
-    client::bridge::gateway::ShardManager,
-    framework::{standard::macros::group, StandardFramework},
-    http::Http,
-    model::{
-        event::ResumedEvent,
-        gateway::Ready,
-        interactions::{
-            message_component::{ComponentType, InteractionMessage},
-            Interaction,
-        },
-    },
-    prelude::*,
-};
 use tracing::{error, info, log::warn, Level};
 
 pub const BOT_NAME: &str = "Zatzoubot";
 pub const BOT_VERSION: &str = "0.1.0";
 
-pub struct ShardManagerContainer;
+pub struct Data {}
 
-impl TypeMapKey for ShardManagerContainer {
-    type Value = Arc<Mutex<ShardManager>>;
-}
+pub type Error = Box<dyn std::error::Error + Send + Sync>;
+pub type Context<'a> = poise::Context<'a, Data, Error>;
 
-struct Handler;
+/// handle discord events
+async fn event_listener(
+    ctx: &serenity::Context,
+    event: &poise::Event<'_>,
+    _framework: &poise::Framework<Data, Error>,
+    _user_data: &Data,
+) -> Result<(), Error> {
+    match event {
+        poise::Event::Ready { data_about_bot } => {
+            info!("{} is connected!", data_about_bot.user.name)
+        }
+        poise::Event::InteractionCreate { interaction } => {
+            match interaction {
+                Interaction::MessageComponent(intr) => {
+                    if intr.data.component_type == ComponentType::Button {
+                        let msg = &intr.message;
 
-#[async_trait]
-impl EventHandler for Handler {
-    async fn ready(&self, _: Context, ready: Ready) {
-        info!("Connected as {}", ready.user.name);
-    }
-
-    async fn resume(&self, _: Context, _: ResumedEvent) {
-        info!("Resumed");
-    }
-
-    // handle interactions nicely
-    async fn interaction_create(&self, ctx: Context, interaction: Interaction) {
-        match interaction {
-            Interaction::MessageComponent(intr) => {
-                if intr.data.component_type == ComponentType::Button {
-                    let msg = if let InteractionMessage::Regular(msg) = &intr.message {
-                        Some(msg)
-                    } else {
-                        None
-                    };
-
-                    let result = match intr.data.custom_id.as_ref() {
-                        "update_sp" => {
-                            if let Some(msg) = msg {
-                                crate::commands::up::sp_interact_handler(&ctx, &msg, &intr).await
-                            } else {
+                        let result = match intr.data.custom_id.as_ref() {
+                            "update_sp" => {
+                                crate::commands::up::sp_interact_handler(ctx, &msg, &intr).await
+                            }
+                            _ => {
+                                warn!("Button with id `{}` pressed but there is no handler for a button with that id", intr.data.custom_id);
                                 Ok(())
                             }
-                        }
-                        _ => {
-                            warn!("Button with id `{}` pressed but there is no handler for a button with that id", intr.data.custom_id);
-                            Ok(())
-                        }
-                    };
+                        };
 
-                    if let Err(why) = result {
-                        if let Some(msg) = msg {
-                            create_error_msg(
-                                &ctx,
-                                msg,
-                                "Interaction failed",
-                                format!("{}", why).as_ref(),
-                            )
-                            .await;
+                        if let Err(why) = result {
+                            error!("Interaction failed: {}", why);
                         }
                     }
                 }
+                _ => {}
             }
-            _ => {}
         }
+        _ => {}
     }
+
+    Ok(())
 }
 
-#[group]
-#[commands(quit, map, id, maxid, gather, up, sp)]
-struct General;
+#[poise::command(prefix_command, hide_in_help)]
+async fn register(ctx: Context<'_>, #[flag] global: bool) -> Result<(), Error> {
+    poise::builtins::register_application_commands(ctx, global).await?;
+
+    Ok(())
+}
 
 #[tokio::main]
 async fn main() {
-    // Initialize the logger to use environment variables.
-    //
-    // In this case, a good default is setting the environment variable
-    // `RUST_LOG` to `debug`.
+    // initialize the logger with a default log level
     tracing_subscriber::fmt::fmt()
         .with_max_level(Level::INFO)
         .init();
@@ -109,55 +77,77 @@ async fn main() {
 
     let config = config::get_config();
 
-    let token = config.bot.get_token();
-    let app_id = config.bot.get_appid();
-    let cmd_prefix = config.bot.cmd_prefix.as_ref();
-
-    let http = Http::new_with_token(&token);
-
-    // We will fetch your bot's owners and id
-    let (owners, _bot_id) = match http.get_current_application_info().await {
-        Ok(info) => {
-            let mut owners = HashSet::new();
-            owners.insert(info.owner.id);
-
-            (owners, info.id)
-        }
-        Err(why) => panic!("Could not access application info: {:?}", why),
+    // poise options
+    let options = poise::FrameworkOptions {
+        commands: vec![
+            map::map(),
+            up::up(),
+            up::sp(),
+            id::id(),
+            id::maxid(),
+            gather::gather(),
+            help::help(),
+        ],
+        listener: |ctx, event, framework, user_data| {
+            Box::pin(event_listener(ctx, event, framework, user_data))
+        },
+        on_error: |error| Box::pin(crate::error::error_handler(error)),
+        prefix_options: poise::PrefixFrameworkOptions {
+            prefix: Some(config.bot.cmd_prefix.clone()),
+            mention_as_prefix: true,
+            edit_tracker: None,
+            ..Default::default()
+        },
+        ..Default::default()
     };
 
-    // Create the framework
-    let framework = StandardFramework::new()
-        .configure(|c| c.owners(owners).prefix(cmd_prefix))
-        .bucket("image", |b| b.delay(5).time_span(60).limit(5))
-        .await
-        .group(&GENERAL_GROUP)
-        .after(error::command_error_hook)
-        .help(&help::HELP);
+    let bot = poise::Framework::build()
+        .token(config.bot.get_token())
+        .options(options)
+        .user_data_setup(|ctx, _bot_data, framework| {
+            Box::pin(async move {
+                // register the application commands
+                info!("Registering application commands globally");
+                let mut cmd_builder = serenity::CreateApplicationCommands::default();
+                let cmds = &framework.options().commands;
 
-    let mut client = Client::builder(&token)
-        .application_id(app_id)
-        .framework(framework)
-        .event_handler(Handler)
-        .await
-        .expect("Err creating client");
+                for cmd in cmds {
+                    if let Some(slash_cmd) = cmd.create_as_slash_command() {
+                        cmd_builder.add_application_command(slash_cmd);
+                    }
+                    if let Some(ctxmenu_cmd) = cmd.create_as_context_menu_command() {
+                        cmd_builder.add_application_command(ctxmenu_cmd);
+                    }
+                }
 
-    {
-        let mut data = client.data.write().await;
-        // shardmanager
-        data.insert::<ShardManagerContainer>(client.shard_manager.clone());
-    }
+                let cmd_builder = serenity::json::Value::Array(cmd_builder.0);
 
-    let shard_manager = client.shard_manager.clone();
+                let create = ctx
+                    .http
+                    .create_global_application_commands(&cmd_builder)
+                    .await;
 
-    tokio::spawn(async move {
-        tokio::signal::ctrl_c()
-            .await
-            .expect("Could not register ctrl+c handler");
-        shard_manager.lock().await.shutdown_all().await;
-    });
+                if let Err(why) = create {
+                    error!("Failed to register app commands: {}", why);
+                } else {
+                    info!("Application commands registered successfully");
+                }
 
-    if let Err(why) = client.start().await {
-        error!("Client error: {:?}", why);
+                let shard_manager = framework.shard_manager().clone();
+
+                tokio::spawn(async move {
+                    tokio::signal::ctrl_c()
+                        .await
+                        .expect("Could not register ctrl+c handler");
+                    shard_manager.lock().await.shutdown_all().await;
+                });
+
+                // Initialize the data struct
+                Ok(Data {})
+            })
+        });
+
+    if let Err(why) = bot.run().await {
+        error!("Bot failed to start: {:?}", why);
     }
 }

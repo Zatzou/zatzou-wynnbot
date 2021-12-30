@@ -19,8 +19,6 @@ pub struct Config {
 pub struct BotConfig {
     /// Bot token
     token: Option<String>,
-    /// Bot app id
-    app_id: Option<u64>,
     /// Prefix used for commands
     #[serde(default = "default_cmd_prefix")]
     pub cmd_prefix: String,
@@ -37,16 +35,6 @@ impl BotConfig {
             t
         } else {
             error!("No token set in config.toml");
-            panic!();
-        }
-    }
-
-    /// Function for getting the app_id since it isn't optional and has to be checked
-    pub fn get_appid(&self) -> u64 {
-        if let Some(t) = self.app_id {
-            t
-        } else {
-            error!("No app_id set in config.toml");
             panic!();
         }
     }

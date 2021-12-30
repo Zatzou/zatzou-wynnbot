@@ -2,16 +2,12 @@ use std::collections::BTreeMap;
 use std::ops::RangeInclusive;
 
 use once_cell::sync::OnceCell;
-use serenity::framework::standard::{macros::command, CommandResult};
-use serenity::model::interactions::message_component::ButtonStyle;
-use serenity::model::prelude::*;
-use serenity::prelude::*;
+use poise::serenity_prelude::ButtonStyle;
 use tokio::fs;
 
 use crate::error::create_error_msg;
-use crate::helpers::parse_command_args_raw;
 use crate::wynn::items::{Identification, ItemList, Powders, StatusType, IDGROUPS};
-use crate::{BOT_NAME, BOT_VERSION};
+use crate::{Context, Error, BOT_NAME, BOT_VERSION};
 
 const START_CHAR: char = '󵿰';
 const END_CHAR: char = '󵿱';
@@ -26,38 +22,30 @@ const AIR: &str = "<:air:899382632532570123>";
 
 static ITEMDB: OnceCell<ItemList> = OnceCell::new();
 
-#[command]
-#[description("Command for reading wynntils id strings")]
-#[usage("[id string]")]
-#[help_available]
-#[only_in(guilds)]
-async fn id(ctx: &Context, msg: &Message) -> CommandResult {
+/// Read wynntils id strings
+#[poise::command(prefix_command, slash_command)]
+pub async fn id(
+    ctx: Context<'_>,
+    #[rest]
+    #[description = "Wynntils id string"]
+    id_string: String,
+) -> Result<(), Error> {
     // read and parse the input string
-    let mut temp = if let Some(item) = parse_command_args_raw(msg) {
-        item.trim_start_matches(START_CHAR)
-            .trim_end_matches(END_CHAR)
-            .split_terminator(SEPARATOR)
-    } else {
-        create_error_msg(
-            ctx,
-            msg,
-            "Invalid comamnd arguments",
-            "Usage: .id (item id string)",
-        )
-        .await;
-        return Ok(());
-    };
+    let mut temp = id_string
+        .trim_start_matches(START_CHAR)
+        .trim_end_matches(END_CHAR)
+        .split_terminator(SEPARATOR);
 
     let name = if let Some(v) = temp.next() {
         v.to_string()
     } else {
-        create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
+        create_error_msg(ctx, "Invalid id string", "the given string is invalid").await;
         return Ok(());
     };
     let ids = if let Some(v) = temp.next() {
         v
     } else {
-        create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
+        create_error_msg(ctx, "Invalid id string", "the given string is invalid").await;
         return Ok(());
     }; // https://github.com/Wynntils/Wynntils/blob/development/src/main/java/com/wynntils/modules/utilities/managers/ChatItemManager.java
     let powders = temp.next();
@@ -86,7 +74,6 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     } else {
         create_error_msg(
             ctx,
-            msg,
             "Invalid item",
             "the given item was not found in the current database",
         )
@@ -328,37 +315,36 @@ async fn id(ctx: &Context, msg: &Message) -> CommandResult {
     }
 
     // send final message
-    msg.channel_id
-        .send_message(&ctx.http, |m| {
-            m.embed(|e| {
-                e.color(item.get_color());
-                e.title(itemname);
-                e.description(desc);
-                e.footer(|f| {
-                    f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
-                    f
-                });
-                e
+    ctx.send(|m| {
+        m.embed(|e| {
+            e.color(item.get_color());
+            e.title(itemname);
+            e.description(desc);
+            e.footer(|f| {
+                f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
+                f
             });
-            m.components(|c| {
-                c.create_action_row(|ar| {
-                    ar.create_button(|b| {
-                        b.style(ButtonStyle::Link);
-                        b.label("Open item on Wynnbuilder");
-                        b.url(format!(
-                            "https://wynnbuilder.github.io/item.html#{}",
-                            &item.displayName.replace(" ", "%20")
-                        ));
-                        b.disabled(false);
-                        b
-                    });
-                    ar
+            e
+        });
+        m.components(|c| {
+            c.create_action_row(|ar| {
+                ar.create_button(|b| {
+                    b.style(ButtonStyle::Link);
+                    b.label("Open item on Wynnbuilder");
+                    b.url(format!(
+                        "https://wynnbuilder.github.io/item.html#{}",
+                        &item.displayName.replace(" ", "%20")
+                    ));
+                    b.disabled(false);
+                    b
                 });
-                c
+                ar
             });
-            m
-        })
-        .await?;
+            c
+        });
+        m
+    })
+    .await?;
     Ok(())
 }
 
@@ -409,31 +395,25 @@ fn get_percent(value: i32, id: &Id, inverted: &Vec<Identification>) -> f64 {
     };
 }
 
-#[command]
-#[description("Creates perfect id strings for items")]
-#[usage("[item name]")]
-#[help_available]
-#[only_in(guilds)]
-async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
+/// Create perfect 100% id strings
+#[poise::command(prefix_command, slash_command)]
+pub async fn maxid(
+    ctx: Context<'_>,
+    #[rest]
+    #[description = "Name of the item"]
+    item: String,
+) -> Result<(), Error> {
     // read and parse the input string
-    let mut temp = if let Some(item) = parse_command_args_raw(msg) {
-        item.trim_start_matches(START_CHAR)
-            .trim_end_matches(END_CHAR)
-            .split_terminator(SEPARATOR)
-    } else {
-        create_error_msg(
-            ctx,
-            msg,
-            "Invalid comamnd arguments",
-            "Usage: .maxid (wynntils item id string or item name)",
-        )
-        .await;
-        return Ok(());
-    };
+
+    let mut temp = item
+        .trim_start_matches(START_CHAR)
+        .trim_end_matches(END_CHAR)
+        .split_terminator(SEPARATOR);
+
     let name = if let Some(v) = temp.next() {
         v.to_string()
     } else {
-        create_error_msg(ctx, msg, "Invalid id string", "the given string is invalid").await;
+        create_error_msg(ctx, "Invalid id string", "the given string is invalid").await;
         return Ok(());
     };
 
@@ -457,7 +437,6 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
     } else {
         create_error_msg(
             ctx,
-            msg,
             "Invalid item",
             "the given item was not found in the current database",
         )
@@ -509,12 +488,11 @@ async fn maxid(ctx: &Context, msg: &Message) -> CommandResult {
 
     let output = format!("󵿰{}󵿲{}󵀀󵿱", item.displayName, perfids);
 
-    msg.channel_id
-        .send_message(&ctx.http, |m| {
-            m.content(output);
-            m
-        })
-        .await?;
+    ctx.send(|m| {
+        m.content(output);
+        m
+    })
+    .await?;
 
     Ok(())
 }

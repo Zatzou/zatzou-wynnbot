@@ -7,11 +7,12 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
-serenity = { version = "0.10.9", features = ["cache", "framework", "standard_framework", "rustls_backend", "gateway", "unstable_discord_api", "collector"] }
+#serenity = { version = "0.10.9", features = ["cache", "framework", "standard_framework", "rustls_backend", "gateway", "unstable_discord_api", "collector"] }
+poise = { git = "https://github.com/kangalioo/poise" }
 
 toml = "0.5"
 
-reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
+reqwest = { version = "^0.11.7", default-features = false, features = ["json", "rustls-tls"] }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1"
 cached = "0.26.2"

@@ -1,29 +1,24 @@
-use std::{borrow::Cow, error::Error, collections::HashMap};
+use std::{borrow::Cow, collections::HashMap};
 
 use image::{DynamicImage, ImageBuffer, Rgba};
 use imageproc::{drawing, rect::Rect};
 use once_cell::sync::OnceCell;
-use serenity::{
-    client::Context,
-    framework::standard::{macros::command, CommandResult},
-    http::AttachmentType,
-    model::channel::Message,
-};
 
 use image::io::Reader as ImageReader;
+use poise::serenity_prelude::AttachmentType;
 
 use crate::{
     config::get_config,
     wynn::Gather::{self, GatherSpot, GatherSpots},
+    Context, Error,
 };
-use crate::{error::create_error_msg, helpers::parse_command_args_raw, BOT_NAME, BOT_VERSION};
+use crate::{error::create_error_msg, BOT_NAME, BOT_VERSION};
 
 /// Static for the gray image file so we don't have to load it every time
 static MAPBASE_GRAY: OnceCell<image::ImageBuffer<Rgba<u8>, Vec<u8>>> = OnceCell::new();
 
 /// Helper function for getting the base map
-fn get_mapbase_gray() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn Error + Send + Sync>>
-{
+fn get_mapbase_gray() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Error> {
     let out = if let Some(pm) = MAPBASE_GRAY.get() {
         pm.clone()
     } else {
@@ -40,25 +35,18 @@ fn get_mapbase_gray() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn E
     Ok(out)
 }
 
-#[command]
-#[description("Finds gather spots and renders them to a map")]
-#[usage("[material]")]
-#[help_available]
-#[only_in(guilds)]
-#[bucket("image")]
-async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
-    let cmd_args = parse_command_args_raw(msg);
+/// Finds gather spots and renders them to a map
+#[poise::command(prefix_command, slash_command)]
+pub async fn gather(
+    ctx: Context<'_>,
+    #[rest]
+    #[description = "Name of the material you want to query"]
+    material: String,
+) -> Result<(), Error> {
+    let wanted = material;
 
-    // get the wanted resource
-    let wanted = if let Some(s) = cmd_args {
-        s.trim().to_uppercase()
-    } else {
-        return gather_usage(ctx, msg).await;
-    };
-
-    let processingmsg = msg
-        .channel_id
-        .send_message(&ctx.http, |m| {
+    let processingmsg = ctx
+        .send(|m| {
             m.embed(|e| {
                 e.title("Processing");
                 e.description(
@@ -102,19 +90,19 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
     }
 
     if count == 0 {
+        // TODO: fix
         // delete the processing message
-        processingmsg.delete(&ctx.http).await?;
-        
+        //processingmsg.delete(&ctx.http).await?;
+
         let mut alltypes = String::new();
         let types = get_all_res(&spots);
-        
+
         for t in types {
             alltypes.push_str(&format!("`{}`, ", t.0));
         }
-        
+
         create_error_msg(
             ctx,
-            msg,
             "No matches",
             &format!(
                 "The current filter `{}` did not match any known resources\nCurrent known resource types are:\n{}",
@@ -142,27 +130,27 @@ async fn gather(ctx: &Context, msg: &Message) -> CommandResult {
     let cow = Cow::from(img_data);
 
     // construct reply message
-    msg.channel_id
-        .send_message(&ctx.http, |m| {
-            m.embed(|e| {
-                e.title(format!("{} matches", count));
-                e.image("attachment://map.webp");
-                e.footer(|f| {
-                    f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
-                    f
-                });
-                e
+    ctx.send(|m| {
+        m.embed(|e| {
+            e.title(format!("{} matches", count));
+            e.image("attachment://map.webp");
+            e.footer(|f| {
+                f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
+                f
             });
-            m.add_file(AttachmentType::Bytes {
-                data: cow,
-                filename: String::from("map.webp"),
-            });
-            m
-        })
-        .await?;
+            e
+        });
+        m.attachment(AttachmentType::Bytes {
+            data: cow,
+            filename: String::from("map.webp"),
+        });
+        m
+    })
+    .await?;
 
+    // TODO: fix
     // delete the processing message
-    processingmsg.delete(&ctx.http).await?;
+    //processingmsg.delete(&ctx.http).await?;
 
     Ok(())
 }
@@ -189,21 +177,9 @@ fn add_rect(
     drawing::draw_filled_rect_mut(img, rect, color);
 }
 
-async fn gather_usage(ctx: &Context, msg: &Message) -> CommandResult {
-    create_error_msg(
-        ctx,
-        msg,
-        "Invalid command arguments",
-        "correct usage: .gather (material)\nYou can also use a partial material name",
-    )
-    .await;
-
-    Ok(())
-}
-
 fn get_all_res<'a>(spots: &GatherSpots) -> HashMap<String, i32> {
     let mut out: HashMap<String, i32> = HashMap::new();
-    
+
     for s in &spots.woodCutting {
         append_spots(&mut out, &s);
     }

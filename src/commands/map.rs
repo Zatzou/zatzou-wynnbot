@@ -7,10 +7,11 @@ use imageproc::drawing;
 use imageproc::rect::Rect;
 use once_cell::sync::OnceCell;
 use rusttype::{Font, Scale};
-use serenity::framework::standard::{macros::command, CommandResult};
+
+use poise::serenity_prelude as serenity;
 use serenity::http::AttachmentType;
-use serenity::model::prelude::*;
-use serenity::prelude::*;
+
+use crate::Context;
 
 use image::io::Reader as ImageReader;
 
@@ -53,15 +54,11 @@ async fn get_map() -> Result<Territories, reqwest::Error> {
     Ok(terrs)
 }
 
-#[command]
-#[description("Renders the guild map")]
-#[help_available]
-#[only_in(guilds)]
-#[bucket("image")]
-async fn map(ctx: &Context, msg: &Message) -> CommandResult {
-    let processingmsg = msg
-        .channel_id
-        .send_message(&ctx.http, |m| {
+/// Render the wynncraft guild map
+#[poise::command(prefix_command, slash_command, track_edits)]
+pub async fn map(ctx: Context<'_>) -> Result<(), crate::Error> {
+    let processingmsg = ctx
+        .send(|m| {
             m.embed(|e| {
                 e.title("Processing");
                 e.description(
@@ -149,26 +146,25 @@ async fn map(ctx: &Context, msg: &Message) -> CommandResult {
     let cow = Cow::from(img_data);
 
     // construct reply message
-    msg.channel_id
-        .send_message(&ctx.http, |m| {
-            m.embed(|e| {
-                e.image("attachment://map.webp");
-                e.footer(|f| {
-                    f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
-                    f
-                });
-                e.timestamp(chrono::Utc::now().to_rfc3339());
-                e
+    ctx.send(|m| {
+        m.embed(|e| {
+            e.image("attachment://map.webp");
+            e.footer(|f| {
+                f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
+                f
             });
-            m.add_file(AttachmentType::Bytes {
-                data: cow,
-                filename: String::from("map.webp"),
-            });
-            m
-        })
-        .await?;
+            e.timestamp(chrono::Utc::now().to_rfc3339());
+            e
+        });
+        m.attachment(AttachmentType::Bytes {
+            data: cow,
+            filename: String::from("map.webp"),
+        });
+        m
+    })
+    .await?;
 
-    processingmsg.delete(&ctx.http).await?;
+    // processingmsg.delete(&ctx.http).await?;
 
     Ok(())
 }
