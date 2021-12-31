@@ -8,8 +8,7 @@ use imageproc::rect::Rect;
 use once_cell::sync::OnceCell;
 use rusttype::{Font, Scale};
 
-use poise::serenity_prelude as serenity;
-use serenity::http::AttachmentType;
+use poise::serenity_prelude::AttachmentType;
 
 use crate::Context;
 
