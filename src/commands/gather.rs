@@ -45,18 +45,8 @@ pub async fn gather(
 ) -> Result<(), Error> {
     let wanted = material;
 
-    let processingmsg = ctx
-        .send(|m| {
-            m.embed(|e| {
-                e.title("Processing");
-                e.description(
-                    "Your request is currently processing it may take a second to complete",
-                );
-                e
-            });
-            m
-        })
-        .await?;
+    // defer here so we can respond with an image and discord knows that it might take a while before we respond
+    ctx.defer().await?;
 
     let spots = Gather::get_gatherspots().await?;
 

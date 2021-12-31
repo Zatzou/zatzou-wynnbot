@@ -57,18 +57,8 @@ async fn get_map() -> Result<Territories, reqwest::Error> {
 /// Render the wynncraft guild map
 #[poise::command(prefix_command, slash_command, track_edits)]
 pub async fn map(ctx: Context<'_>) -> Result<(), crate::Error> {
-    let processingmsg = ctx
-        .send(|m| {
-            m.embed(|e| {
-                e.title("Processing");
-                e.description(
-                    "Your request is currently processing it may take a second to complete",
-                );
-                e
-            });
-            m
-        })
-        .await?;
+    // defer here so we can respond with an image and discord knows that it might take a while before we respond
+    ctx.defer().await?;
 
     // load territory data from wynntils api
     let terrs = get_map().await?;

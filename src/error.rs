@@ -23,7 +23,7 @@ pub async fn error_handler(error: poise::FrameworkError<'_, Data, Error>) {
                 create_error_msg(
                     ctx,
                     "An unknown internal error has occured",
-                    &format!("{}", error),
+                    &format!("{:?}", error),
                 )
                 .await;
             }
@@ -36,7 +36,7 @@ pub async fn error_handler(error: poise::FrameworkError<'_, Data, Error>) {
 
 /// Function for sending error messages easily
 pub async fn create_error_msg(ctx: Context<'_>, title: &str, desc: &str) {
-    ctx.send(|m| {
+    let errormsg = ctx.send(|m| {
         m.embed(|e| {
             e.color(ERROR_COLOR);
             e.title(title);
@@ -49,6 +49,9 @@ pub async fn create_error_msg(ctx: Context<'_>, title: &str, desc: &str) {
         });
         m
     })
-    .await
-    .unwrap();
+    .await;
+
+    if let Err(why) = errormsg {
+        error!("Failed to send an error message for error: `{} {}` because another error occured while sending the error message: {}", title, desc, why);
+    }
 }
