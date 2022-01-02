@@ -36,20 +36,21 @@ pub async fn error_handler(error: poise::FrameworkError<'_, Data, Error>) {
 
 /// Function for sending error messages easily
 pub async fn create_error_msg(ctx: Context<'_>, title: &str, desc: &str) {
-    let errormsg = ctx.send(|m| {
-        m.embed(|e| {
-            e.color(ERROR_COLOR);
-            e.title(title);
-            e.description(desc);
-            e.footer(|f| {
-                f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
-                f
+    let errormsg = ctx
+        .send(|m| {
+            m.embed(|e| {
+                e.color(ERROR_COLOR);
+                e.title(title);
+                e.description(desc);
+                e.footer(|f| {
+                    f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
+                    f
+                });
+                e
             });
-            e
-        });
-        m
-    })
-    .await;
+            m
+        })
+        .await;
 
     if let Err(why) = errormsg {
         error!("Failed to send an error message for error: `{} {}` because another error occured while sending the error message: {}", title, desc, why);

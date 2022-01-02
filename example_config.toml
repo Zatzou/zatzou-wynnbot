@@ -1,5 +1,12 @@
 [bot] # basic bot information
 token = "DISCORD TOKEN HERE"
+
+[commands]
+# whenever to register slash commands with discord
+# NOTE: it may take a while for discord to unregister slash commands
+register_slash_cmds = true
+# whenever to enable prefix commands
+enable_prefix_cmds = false
 # prefix for commands
 cmd_prefix = "."
 

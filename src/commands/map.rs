@@ -16,7 +16,6 @@ use image::io::Reader as ImageReader;
 
 use tracing::info;
 
-use crate::config::get_config;
 use crate::wynn::world::Territories;
 use crate::{BOT_NAME, BOT_VERSION};
 use cached::proc_macro::cached;
@@ -126,7 +125,7 @@ pub async fn map(ctx: Context<'_>) -> Result<(), crate::Error> {
         let img = &DynamicImage::ImageRgba8(out.0);
 
         let encoder = webp::Encoder::from_image(img)?;
-        let encoded = encoder.encode(get_config().image.webp_quality);
+        let encoded = encoder.encode(ctx.data().config.image.webp_quality);
 
         img_data = (*encoded).to_vec();
     }

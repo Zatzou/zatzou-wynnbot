@@ -1,14 +1,23 @@
 use std::fs;
 
-use once_cell::sync::OnceCell;
 use serde::Deserialize;
 use tracing::{error, info};
+
+fn default_true() -> bool {
+    true
+}
+fn default_false() -> bool {
+    false
+}
 
 /// Root structure for the bot configuration
 #[derive(Deserialize)]
 pub struct Config {
     /// Core configuration options
     pub bot: BotConfig,
+    #[serde(default)]
+    /// Options for commands
+    pub commands: CmdConfig,
     #[serde(default)]
     /// Config options that deal with images
     pub image: ImageConfig,
@@ -19,13 +28,6 @@ pub struct Config {
 pub struct BotConfig {
     /// Bot token
     token: Option<String>,
-    /// Prefix used for commands
-    #[serde(default = "default_cmd_prefix")]
-    pub cmd_prefix: String,
-}
-
-fn default_cmd_prefix() -> String {
-    String::from(".")
 }
 
 impl BotConfig {
@@ -38,6 +40,34 @@ impl BotConfig {
             panic!();
         }
     }
+}
+
+#[derive(Deserialize)]
+pub struct CmdConfig {
+    /// whenever to register the slash commands on startup
+    /// Once slash commands are registered it may take some time for discord to unregister them
+    #[serde(default = "default_true")]
+    pub register_slash_cmds: bool,
+    /// whenever to enable prefix commands
+    #[serde(default = "default_false")]
+    pub enable_prefix_cmds: bool,
+    /// prefix for commands, only used when prefix commands are enabled
+    #[serde(default = "default_cmd_prefix")]
+    pub cmd_prefix: String,
+}
+
+impl Default for CmdConfig {
+    fn default() -> Self {
+        Self {
+            register_slash_cmds: true,
+            enable_prefix_cmds: false,
+            cmd_prefix: ".".to_string(),
+        }
+    }
+}
+
+fn default_cmd_prefix() -> String {
+    String::from(".")
 }
 
 /// Image encoding settings
@@ -58,13 +88,10 @@ fn default_webp_quality() -> f32 {
     80.0
 }
 
-/// Static for holding the config
-static CONFIG: OnceCell<Config> = OnceCell::new();
-
 /// Function for initially loading and parsing the config file
 ///
 /// This function should only be called once
-pub fn read_config() {
+pub fn read_config() -> Config {
     // read and deserialize the config file
     info!("Reading config from file ./config.toml");
 
@@ -73,12 +100,7 @@ pub fn read_config() {
         Ok(data) => {
             // parse the config file
             match toml::from_slice::<Config>(&data) {
-                Ok(config) => {
-                    if let Err(_) = CONFIG.set(config) {
-                        // this is unreachable since `read_config()` should only be called once at startup
-                        error!("Attempted to write config but config is already written");
-                    };
-                }
+                Ok(config) => config,
                 Err(why) => {
                     error!("failed parsing the config file:");
                     error!("{}", why);
@@ -91,15 +113,5 @@ pub fn read_config() {
             error!("{}", why);
             panic!();
         }
-    }
-}
-
-/// Function for getting the config variables easily
-pub fn get_config() -> &'static Config {
-    if let Some(c) = CONFIG.get() {
-        c
-    } else {
-        // this is unreachable unless something tries to read the config before it is initialized
-        unreachable!("Reading config failed but it should not be able to fail");
     }
 }

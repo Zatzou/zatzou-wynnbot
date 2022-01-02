@@ -5,6 +5,7 @@ mod help;
 mod wynn;
 
 use commands::{gather, id, map, up};
+use config::Config;
 use poise::serenity_prelude::{self as serenity, ComponentType, Interaction};
 
 use tracing::{error, info, log::warn, Level};
@@ -12,7 +13,9 @@ use tracing::{error, info, log::warn, Level};
 pub const BOT_NAME: &str = "Zatzoubot";
 pub const BOT_VERSION: &str = "0.1.0";
 
-pub struct Data {}
+pub struct Data {
+    config: Config,
+}
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
 pub type Context<'a> = poise::Context<'a, Data, Error>;
@@ -28,30 +31,28 @@ async fn event_listener(
         poise::Event::Ready { data_about_bot } => {
             info!("{} is connected!", data_about_bot.user.name)
         }
-        poise::Event::InteractionCreate { interaction } => {
-            match interaction {
-                Interaction::MessageComponent(intr) => {
-                    if intr.data.component_type == ComponentType::Button {
-                        let msg = &intr.message;
+        poise::Event::InteractionCreate { interaction } => match interaction {
+            Interaction::MessageComponent(intr) => {
+                if intr.data.component_type == ComponentType::Button {
+                    let msg = &intr.message;
 
-                        let result = match intr.data.custom_id.as_ref() {
-                            "update_sp" => {
-                                crate::commands::up::sp_interact_handler(ctx, &msg, &intr).await
-                            }
-                            _ => {
-                                warn!("Button with id `{}` pressed but there is no handler for a button with that id", intr.data.custom_id);
-                                Ok(())
-                            }
-                        };
-
-                        if let Err(why) = result {
-                            error!("Interaction failed: {}", why);
+                    let result = match intr.data.custom_id.as_ref() {
+                        "update_sp" => {
+                            crate::commands::up::sp_interact_handler(ctx, &msg, &intr).await
                         }
+                        _ => {
+                            warn!("Button with id `{}` pressed but there is no handler for a button with that id", intr.data.custom_id);
+                            Ok(())
+                        }
+                    };
+
+                    if let Err(why) = result {
+                        error!("Interaction failed: {}", why);
                     }
                 }
-                _ => {}
             }
-        }
+            _ => {}
+        },
         _ => {}
     }
 
@@ -73,9 +74,7 @@ async fn main() {
         .init();
 
     // Read the config file
-    config::read_config();
-
-    let config = config::get_config();
+    let config = config::read_config();
 
     // poise options
     let options = poise::FrameworkOptions {
@@ -93,8 +92,12 @@ async fn main() {
         },
         on_error: |error| Box::pin(crate::error::error_handler(error)),
         prefix_options: poise::PrefixFrameworkOptions {
-            prefix: Some(config.bot.cmd_prefix.clone()),
-            mention_as_prefix: true,
+            prefix: if config.commands.enable_prefix_cmds {
+                Some(config.commands.cmd_prefix.clone())
+            } else {
+                None
+            },
+            mention_as_prefix: false,
             edit_tracker: None,
             ..Default::default()
         },
@@ -143,7 +146,7 @@ async fn main() {
                 });
 
                 // Initialize the data struct
-                Ok(Data {})
+                Ok(Data { config })
             })
         });
 

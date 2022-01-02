@@ -7,12 +7,11 @@ use once_cell::sync::OnceCell;
 use image::io::Reader as ImageReader;
 use poise::serenity_prelude::AttachmentType;
 
+use crate::{error::create_error_msg, BOT_NAME, BOT_VERSION};
 use crate::{
-    config::get_config,
     wynn::Gather::{self, GatherSpot, GatherSpots},
     Context, Error,
 };
-use crate::{error::create_error_msg, BOT_NAME, BOT_VERSION};
 
 /// Static for the gray image file so we don't have to load it every time
 static MAPBASE_GRAY: OnceCell<image::ImageBuffer<Rgba<u8>, Vec<u8>>> = OnceCell::new();
@@ -111,7 +110,7 @@ pub async fn gather(
         let img = &DynamicImage::ImageRgba8(out.0);
 
         let encoder = webp::Encoder::from_image(img)?;
-        let encoded = encoder.encode(get_config().image.webp_quality);
+        let encoded = encoder.encode(ctx.data().config.image.webp_quality);
 
         img_data = (*encoded).to_vec();
     }
