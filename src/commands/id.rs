@@ -225,7 +225,7 @@ pub async fn id(
             StatusType::THREE_SECONDS => "/3s",
         };
 
-        if id.fixed {
+        if id.fixed || (-1 <= id.baseval && id.baseval <= 1) {
             desc.push_str(&format!(
                 "{}{} {}\n",
                 formatnum(id.baseval),
