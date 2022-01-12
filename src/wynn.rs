@@ -329,7 +329,7 @@ pub mod items {
         pub strength: Option<i32>,
         pub dexterity: Option<i32>,
         pub intelligence: Option<i32>,
-        pub defence: Option<i32>,
+        pub defense: Option<i32>,
         pub agility: Option<i32>,
     }
 

@@ -174,7 +174,7 @@ pub async fn id(
                 desc.push_str(&format!("Intelligence Min: {}\n", d));
             }
         }
-        if let Some(d) = requirements.defence {
+        if let Some(d) = requirements.defense {
             if d != 0 {
                 desc.push_str(&format!("Defence Min: {}\n", d));
             }
