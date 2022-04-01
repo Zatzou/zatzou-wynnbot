@@ -28,6 +28,8 @@ pub struct Config {
 pub struct BotConfig {
     /// Bot token
     token: Option<String>,
+    /// Name of the bot
+    pub name: String,
 }
 
 impl BotConfig {

@@ -1,5 +1,8 @@
 [bot] # basic bot information
 token = "DISCORD TOKEN HERE"
+# this is the name that the bot will use for itself
+# zatzoubot is still used internally as user-agent
+name = "Zatzoubot"
 
 [commands]
 # whenever to register slash commands with discord

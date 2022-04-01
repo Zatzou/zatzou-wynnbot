@@ -38,7 +38,7 @@ pub mod world {
         pub territory: String,
         pub guild: String,
         pub guildPrefix: String,
-        pub guildColor: String,
+        pub guildColor: Option<String>,
         pub acquired: String,
         // There is additional data we aren't capturing
         pub location: TerritoryLocation,
@@ -429,11 +429,15 @@ pub mod Gather {
     #[cached(time = 3600, result = true)]
     pub async fn get_gatherspots() -> Result<GatherSpots, reqwest::Error> {
         info!("Getting new gathering data from wynntils");
-        let gather: GatherSpots =
-            reqwest::get("https://athena.wynntils.com/cache/get/gatheringSpots")
-                .await?
-                .json()
-                .await?;
+        let client = crate::get_reqwest_client()?;
+
+        let gather: GatherSpots = client
+            .get("https://athena.wynntils.com/cache/get/gatheringSpots")
+            .send()
+            .await?
+            .json()
+            .await?;
+        
         Ok(gather)
     }
 
@@ -471,10 +475,15 @@ pub mod Servers {
     #[cached(time = 300, result = true)]
     pub async fn get_servers() -> Result<Vec<ParsedServer>, reqwest::Error> {
         info!("Getting new server data from wynntils");
-        let servers: ServerList = reqwest::get("https://athena.wynntils.com/cache/get/serverList")
+        let client = crate::get_reqwest_client()?;
+
+        let servers: ServerList = client
+            .get("https://athena.wynntils.com/cache/get/serverList")
+            .send()
             .await?
             .json()
             .await?;
+        
         let mut parsed = Vec::new();
         for (k, v) in servers.servers.into_iter() {
             parsed.push(ParsedServer {

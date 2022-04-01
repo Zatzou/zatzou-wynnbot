@@ -7,7 +7,7 @@ use tokio::fs;
 
 use crate::error::create_error_msg;
 use crate::wynn::items::{Identification, ItemList, Powders, StatusType, IDGROUPS};
-use crate::{Context, Error, BOT_NAME, BOT_VERSION};
+use crate::{Context, Error, gen_embed_footer};
 
 const START_CHAR: char = '󵿰';
 const END_CHAR: char = '󵿱';
@@ -320,10 +320,7 @@ pub async fn id(
             e.color(item.get_color());
             e.title(itemname);
             e.description(desc);
-            e.footer(|f| {
-                f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
-                f
-            });
+            gen_embed_footer(e, &ctx.data().config.bot.name);
             e
         });
         m.components(|c| {

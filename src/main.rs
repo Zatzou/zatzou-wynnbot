@@ -4,14 +4,15 @@ mod error;
 mod help;
 mod wynn;
 
+use cached::proc_macro::once;
 use commands::{gather, id, map, up};
 use config::Config;
 use poise::serenity_prelude::{self as serenity, ComponentType, Interaction};
 
 use tracing::{error, info, log::warn, Level};
 
-pub const BOT_NAME: &str = "Zatzoubot";
-pub const BOT_VERSION: &str = "0.1.0";
+pub const BOT_NAME: &str = env!("CARGO_PKG_NAME");
+pub const BOT_VERSION: &str = env!("CARGO_PKG_VERSION");
 
 pub struct Data {
     config: Config,
@@ -153,4 +154,33 @@ async fn main() {
     if let Err(why) = bot.run().await {
         error!("Bot failed to start: {:?}", why);
     }
+}
+
+#[once(result = true)]
+/// Function for building a valid reqwest client
+pub fn get_reqwest_client() -> Result<reqwest::Client, reqwest::Error> {
+    use reqwest::header;
+
+    let mut headers = header::HeaderMap::new();
+    headers.insert(
+        header::USER_AGENT,
+        header::HeaderValue::from_str(&format!("{}/{}", BOT_NAME, BOT_VERSION)).unwrap(),
+    );
+    headers.insert(
+        header::ACCEPT,
+        header::HeaderValue::from_static("application/json"),
+    );
+
+    Ok(reqwest::Client::builder()
+        .default_headers(headers)
+        .build()?)
+}
+
+/// function to generate the embed footer and timestamp
+pub fn gen_embed_footer(e: &mut serenity::CreateEmbed, name: &str) {
+    e.footer(|f| {
+        f.text(format!("{} {}", name, BOT_VERSION));
+        f
+    });
+    e.timestamp(chrono::Utc::now().to_rfc3339());
 }

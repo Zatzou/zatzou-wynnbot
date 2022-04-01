@@ -10,14 +10,13 @@ use rusttype::{Font, Scale};
 
 use poise::serenity_prelude::AttachmentType;
 
-use crate::Context;
+use crate::{Context, gen_embed_footer};
 
 use image::io::Reader as ImageReader;
 
 use tracing::info;
 
 use crate::wynn::world::Territories;
-use crate::{BOT_NAME, BOT_VERSION};
 use cached::proc_macro::cached;
 
 /// Static for the image file so we don't have to load it every time
@@ -45,10 +44,15 @@ fn get_mapbase() -> Result<image::ImageBuffer<Rgba<u8>, Vec<u8>>, Box<dyn Error 
 #[cached(time = 30, result = true)]
 async fn get_map() -> Result<Territories, reqwest::Error> {
     info!("Getting new map data from wynntils");
-    let terrs: Territories = reqwest::get("https://athena.wynntils.com/cache/get/territoryList")
+    let client = crate::get_reqwest_client()?;
+
+    let terrs: Territories = client
+        .get("https://athena.wynntils.com/cache/get/territoryList")
+        .send()
         .await?
         .json()
         .await?;
+
     Ok(terrs)
 }
 
@@ -89,9 +93,13 @@ pub async fn map(ctx: Context<'_>) -> Result<(), crate::Error> {
         };
 
         // guild color calculations
-        let col = if !terr.guildColor.is_empty() {
-            let col = hex::decode(terr.guildColor[1..].to_owned())?;
-            (col[0], col[1], col[2])
+        let col = if let Some(col) = &terr.guildColor {
+            if !col.is_empty() {
+                let col = hex::decode(col[1..].to_owned())?;
+                (col[0], col[1], col[2])
+            } else {
+                guild_color(terr.guild.clone())
+            }
         } else {
             guild_color(terr.guild.clone())
         };
@@ -137,11 +145,7 @@ pub async fn map(ctx: Context<'_>) -> Result<(), crate::Error> {
     ctx.send(|m| {
         m.embed(|e| {
             e.image("attachment://map.webp");
-            e.footer(|f| {
-                f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
-                f
-            });
-            e.timestamp(chrono::Utc::now().to_rfc3339());
+            gen_embed_footer(e, &ctx.data().config.bot.name);
             e
         });
         m.attachment(AttachmentType::Bytes {

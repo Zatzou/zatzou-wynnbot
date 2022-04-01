@@ -2,8 +2,7 @@ use poise::serenity::utils::Color;
 
 use tracing::error;
 
-use crate::{Context, Data, Error};
-use crate::{BOT_NAME, BOT_VERSION};
+use crate::{Context, Data, Error, gen_embed_footer};
 
 /// Color used for errors
 pub const ERROR_COLOR: Color = Color::RED;
@@ -42,10 +41,7 @@ pub async fn create_error_msg(ctx: Context<'_>, title: &str, desc: &str) {
                 e.color(ERROR_COLOR);
                 e.title(title);
                 e.description(desc);
-                e.footer(|f| {
-                    f.text(format!("{} {}", BOT_NAME, BOT_VERSION));
-                    f
-                });
+                gen_embed_footer(e, &ctx.data().config.bot.name);
                 e
             });
             m
