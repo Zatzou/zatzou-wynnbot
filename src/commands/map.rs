@@ -118,8 +118,8 @@ pub async fn map(ctx: Context<'_>) -> Result<(), crate::Error> {
         drawing::draw_text_mut(
             &mut out,
             textcol,
-            x as u32 + 3,
-            y as u32 + 3,
+            x + 3,
+            y + 3,
             Scale::uniform((width as f32 / 2.5).min(height as f32 / 1.5)),
             &font,
             &terr.guildPrefix,

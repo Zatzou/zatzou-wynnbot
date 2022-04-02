@@ -8,7 +8,7 @@ edition = "2021"
 [dependencies]
 tokio = { version = "1.0", features = ["full"] }
 #serenity = { version = "0.10.9", features = ["cache", "framework", "standard_framework", "rustls_backend", "gateway", "unstable_discord_api", "collector"] }
-poise = { git = "https://github.com/kangalioo/poise" }
+poise = { git = "https://github.com/kangalioo/poise", branch = "develop" }
 
 toml = "0.5"
 
@@ -23,9 +23,9 @@ chrono = "0.4"
 tracing = "0.1.23"
 tracing-subscriber = "0.3"
 
-image = { version = "0.23.14", default-features = false, features = ["png"] }
-imageproc = "0.22"
+image = { version = "0.24.1", default-features = false, features = ["png"] }
+imageproc = { git = "https://github.com/image-rs/imageproc" }
 rusttype = "0.9.2"
 crc32fast = "1.2"
 hex = "0.4"
-webp = "0.2"
+webp = "0.2.2"

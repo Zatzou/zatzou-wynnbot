@@ -14,9 +14,9 @@ use crate::wynn::Servers::*;
 #[poise::command(prefix_command, slash_command)]
 pub async fn up(
     ctx: Context<'_>,
-    #[description = "Server number"] n: Option<i32>,
+    #[description = "Server number"] id: Option<i32>,
 ) -> Result<(), Error> {
-    if let Some(n) = n {
+    if let Some(n) = id {
         single_server(ctx, n).await?;
     } else {
         server_list(ctx).await?;

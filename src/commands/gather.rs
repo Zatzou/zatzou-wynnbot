@@ -43,7 +43,7 @@ pub async fn gather(
     #[description = "Name of the material you want to query"]
     material: String,
 ) -> Result<(), Error> {
-    let wanted = material;
+    let wanted = material.to_ascii_uppercase();
 
     // defer here so we can respond with an image and discord knows that it might take a while before we respond
     ctx.defer().await?;
@@ -80,10 +80,6 @@ pub async fn gather(
     }
 
     if count == 0 {
-        // TODO: fix
-        // delete the processing message
-        //processingmsg.delete(&ctx.http).await?;
-
         let mut alltypes = String::new();
         let types = get_all_res(&spots);
 
@@ -134,10 +130,6 @@ pub async fn gather(
         m
     })
     .await?;
-
-    // TODO: fix
-    // delete the processing message
-    //processingmsg.delete(&ctx.http).await?;
 
     Ok(())
 }
