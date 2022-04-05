@@ -5,7 +5,7 @@ use imageproc::{drawing, rect::Rect};
 use once_cell::sync::OnceCell;
 
 use image::io::Reader as ImageReader;
-use poise::serenity_prelude::AttachmentType;
+use poise::serenity_prelude::{AttachmentType, Color};
 
 use crate::gen_embed_footer;
 use crate::error::create_error_msg;
@@ -50,32 +50,38 @@ pub async fn gather(
 
     let spots = Gather::get_gatherspots().await?;
 
-    let mut out = drawing::Blend(get_mapbase_gray()?);
-
     let mut count = 0;
+    let mut spots_wood = Vec::new();
+    let mut spots_mining = Vec::new();
+    let mut spots_farming = Vec::new();
+    let mut spots_fishing = Vec::new();
 
     for spot in &spots.woodCutting {
         if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
-            add_rect(spot, Rgba([0, 255, 0, 255]), &mut out);
+            spots_wood.push(spot.clone());
+            // add_rect(spot, Rgba([0, 255, 0, 255]), &mut out);
         }
     }
     for spot in &spots.mining {
         if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
-            add_rect(spot, Rgba([255, 0, 0, 255]), &mut out);
+            spots_mining.push(spot.clone());
+            // add_rect(spot, Rgba([255, 0, 0, 255]), &mut out);
         }
     }
     for spot in &spots.farming {
         if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
-            add_rect(spot, Rgba([255, 255, 0, 255]), &mut out);
+            spots_farming.push(spot.clone());
+            // add_rect(spot, Rgba([255, 255, 0, 255]), &mut out);
         }
     }
     for spot in &spots.fishing {
         if spot.r#type.contains(&wanted) || wanted.contains(&spot.r#type) {
             count += 1;
-            add_rect(spot, Rgba([0, 0, 255, 255]), &mut out);
+            spots_fishing.push(spot.clone());
+            // add_rect(spot, Rgba([0, 0, 255, 255]), &mut out);
         }
     }
 
@@ -84,7 +90,7 @@ pub async fn gather(
         let types = get_all_res(&spots);
 
         for t in types {
-            alltypes.push_str(&format!("`{}`, ", t.0));
+            alltypes.push_str(&format!("`{}`, ", t.0.to_lowercase()));
         }
 
         create_error_msg(
@@ -98,6 +104,22 @@ pub async fn gather(
         )
         .await;
         return Ok(());
+    }
+
+    let mut out = drawing::Blend(get_mapbase_gray()?);
+
+    // render the spots
+    for spot in &spots_wood {
+        add_rect(spot, Rgba([0, 255, 0, 255]), &mut out);
+    }
+    for spot in &spots_mining {
+        add_rect(spot, Rgba([255, 0, 0, 255]), &mut out);
+    }
+    for spot in &spots_farming {
+        add_rect(spot, Rgba([255, 255, 0, 255]), &mut out);
+    }
+    for spot in &spots_fishing {
+        add_rect(spot, Rgba([0, 0, 255, 255]), &mut out);
     }
 
     // encode image as webp
@@ -134,14 +156,17 @@ pub async fn gather(
     Ok(())
 }
 
+/// calculate the x offset
 fn calc_x(x: f64) -> f64 {
     (x / 3.0) - 566.333 + 1364.0
 }
 
+/// calculate the y offset
 fn calc_z(z: f64) -> f64 {
     (z / 3.0) + 41.0 + 2162.0
 }
 
+/// Adds a spot to the image
 fn add_rect(
     spot: &GatherSpot,
     color: Rgba<u8>,
@@ -156,6 +181,7 @@ fn add_rect(
     drawing::draw_filled_rect_mut(img, rect, color);
 }
 
+/// Gets all of the resource types
 fn get_all_res<'a>(spots: &GatherSpots) -> HashMap<String, i32> {
     let mut out: HashMap<String, i32> = HashMap::new();
 

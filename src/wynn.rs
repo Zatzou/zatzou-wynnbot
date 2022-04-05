@@ -451,7 +451,7 @@ pub mod Gather {
 
     #[derive(Clone, Deserialize)]
     pub struct GatherSpot {
-        pub reliability: i32,
+        //pub reliability: i32, // not needed for anything
         pub location: Location,
         pub r#type: String,
     }
