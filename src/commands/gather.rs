@@ -5,7 +5,7 @@ use imageproc::{drawing, rect::Rect};
 use once_cell::sync::OnceCell;
 
 use image::io::Reader as ImageReader;
-use poise::serenity_prelude::{AttachmentType, Color};
+use poise::serenity_prelude::AttachmentType;
 
 use crate::gen_embed_footer;
 use crate::error::create_error_msg;

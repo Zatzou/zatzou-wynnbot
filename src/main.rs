@@ -7,7 +7,7 @@ mod wynn;
 use cached::proc_macro::once;
 use commands::{gather, id, map, up};
 use config::Config;
-use poise::serenity_prelude::{self as serenity, ComponentType, Interaction};
+use poise::serenity_prelude::{self as serenity, ComponentType, Interaction, Event};
 
 use tracing::{error, info, log::warn, Level};
 
@@ -24,15 +24,15 @@ pub type Context<'a> = poise::Context<'a, Data, Error>;
 /// handle discord events
 async fn event_listener(
     ctx: &serenity::Context,
-    event: &poise::Event<'_>,
+    event: &Event,
     _framework: &poise::Framework<Data, Error>,
     _user_data: &Data,
 ) -> Result<(), Error> {
     match event {
-        poise::Event::Ready { data_about_bot } => {
-            info!("{} is connected!", data_about_bot.user.name)
+        Event::Ready(event) => {
+            info!("{} is connected!", event.ready.user.name);
         }
-        poise::Event::InteractionCreate { interaction } => match interaction {
+        Event::InteractionCreate(interaction) => match &interaction.interaction {
             Interaction::MessageComponent(intr) => {
                 if intr.data.component_type == ComponentType::Button {
                     let msg = &intr.message;
