@@ -1,6 +1,9 @@
 # Zatzou's wynnbot
 My very amazing discord bot that does stuff with wynncraft
 
+## Adding the bot to a server
+You can either invite the bot I run from [here](https://discord.com/api/oauth2/authorize?client_id=896856896382844938&permissions=0&scope=bot%20applications.commands) or build the bot yourself and self host it
+
 ## Building and running
 1. Install [rust](https://rustup.rs/)
 2. clone the repo
